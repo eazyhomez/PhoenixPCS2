@@ -1,0 +1,46 @@
+Prep:
+------
+1. Get inner wall segments
+2. Calculate distance (perpendicular) of a point from a line
+3. Get inner wall segments of a room (Living) 
+4. Get all FWS of a room (Living) below the given elevation (7' : door height)
+5. Get free inner wall segments of a room with length >= 3'
+
+6. Place furniture parallel to the wall
+7. Get quadrant info
+8. Get wall angles
+9. Check for intersection with all furns/fixtures/walls
+10. Check orientation
+11. Get set of wall segments parallel to given line segment
+12. Find distance between two parallel line segments
+13. Calculate the snap co-ordinates
+14. Calculate the co-ordinates of real furnitures
+15. Placement of real furnitures from catalog
+
+Code
+----
+A. Get all FWS in room (Living)
+B. Placement of PCSRect
+C. Snap to the nearest wall
+D. Place all configs of PCS Rects
+E. Placement of real furnitures
+F. Pathway
+
+Demo
+-----
+1. All PCS configs
+2. Save valid designs in different SH3D files
+3. Final - w/o corner table
+
+Issues
+------
+1. All placements are not snapping to walls - Fixed
+2. Orientation inverted in config - Fixed
+3. Placement with Accessibility box - Done
+4. Change PCS configs for maintaining accessibility - Fixed
+5. Increase the length of PCS rect to expand it till the back wall rather than snapping
+6. Corner table placement
+
+Shared
+------
+1. 1st draw

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="com/eteks/test/OneRayOneFurnPhoenix.java|com/eteks/test/Phoenix_Test.java|com/eteks/test/PhoenixPCS_Shared_Demo2.java|com/eteks/test/PhoenixPCS_Mod.java" kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="lib" path="lib/j3dcore.jar"/>
+	<classpathentry kind="lib" path="lib/j3dutils.jar"/>
+	<classpathentry kind="lib" path="lib/SweetHome3D-4.5.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
