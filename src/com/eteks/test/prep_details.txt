@@ -1,7 +1,7 @@
 Modifications:
 --------------
 1. Add Accessibility boxes for doors
-
+2. Add Accessibility boxes for windows and wall openings
 
 --------------------------------------------------------------------------------------------------------------------
 

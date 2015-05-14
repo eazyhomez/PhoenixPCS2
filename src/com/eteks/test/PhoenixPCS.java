@@ -56,6 +56,7 @@ public class PhoenixPCS extends Plugin
 		public List<String> markBoxName = new ArrayList<String>();
 		public HomePieceOfFurniture[] markBoxes = new HomePieceOfFurniture[MARKBOX_COUNT];		
 
+		public List<String> accBoxName = new ArrayList<String>();
 		public HomePieceOfFurniture accBox = null;
 		
 		public List<PCSConfig> pcsConfigList = new ArrayList<PCSConfig>();
@@ -106,7 +107,7 @@ public class PhoenixPCS extends Plugin
 		public float ROOM_AREA_L_MAX = 1000.0f;
 		
 		public int accBoxCount = 0;
-		public float DOOR_ACCESSBOX_DEPTH = 2.5f * CONV_FT_CM;
+		public float ACCESSBOX_DEPTH = 2.5f * CONV_FT_CM;
 		
 		public float ACCESS_CHECK_SIZE = 4.0f * CONV_FT_CM;
 
@@ -338,7 +339,9 @@ public class PhoenixPCS extends Plugin
 				
 				markBoxes = getMarkerBoxes();
 				
-				// 1. Add Accessibility boxes for doors
+				// 1. Add Accessibility boxes for doors ------------//
+				// 2. Add Accessibility boxes for windows and wall openings ------------//
+			
 				storeAllFurnParams(home);
 				storeAllWallRects(home);	
 				
@@ -1989,6 +1992,10 @@ public class PhoenixPCS extends Plugin
 			wallIds = new ArrayList<String>();
 			wallRects = new ArrayList<float[][]>();			
 			wallThicks = new ArrayList<Float>();
+			
+			accBoxName.add("door");
+			accBoxName.add("window");
+			accBoxName.add("wall opening");
 		}		
 
 		public void storeAllFurnParams(Home h)
@@ -2003,10 +2010,7 @@ public class PhoenixPCS extends Plugin
 				{			
 					//dbgStr += hp.getName() + "\n";
 					
-					if(fName.toLowerCase().startsWith("door"))
-						createAccBox(hp);
-					
-					furnIds.add(hp.getName());
+					furnIds.add(fName);
 					furnRects.add(hp.getPoints());
 					furnRectsAccess.add(hp.getPoints());
 					furnElevs.add(hp.getElevation());
@@ -2022,6 +2026,8 @@ public class PhoenixPCS extends Plugin
 					hClone.setElevation(0.0f);
 
 					furnRectsBloated.add(hClone.getPoints());
+					
+					createAccBox(hp, fName.toLowerCase());
 				}
 			}
 			
@@ -2111,8 +2117,21 @@ public class PhoenixPCS extends Plugin
 		
 		// ======================= UTIL FUNCTIONS ======================= //
 		
-		public void createAccBox(HomePieceOfFurniture hpf)
+		public void createAccBox(HomePieceOfFurniture hpf, String fName)
 		{
+			String accessBoxName = "";
+			
+			JOptionPane.showMessageDialog(null, fName);
+			
+			if(fName.contains("door"))
+				accessBoxName = "DoorAccBox" + accBoxCount;
+			else if(fName.contains("window"))
+				accessBoxName = "WindAccBox" + accBoxCount;
+			else if(fName.contains("wall opening"))
+				accessBoxName = "WallOAccBox" + accBoxCount;
+			else
+				return;
+			
 			HomePieceOfFurniture accBoxFurn = accBox.clone();
 			
 			float[][] furnRect = hpf.getPoints();
@@ -2124,35 +2143,37 @@ public class PhoenixPCS extends Plugin
 				boolean bInRoom = room.containsPoint(furnRect[f][0], furnRect[f][1], ROOM_TOLERANCE);
 				
 				if(bInRoom)
+				{
 					innerP.add(new Points(furnRect[f][0], furnRect[f][1]));
+					//putMarkers(new Points(furnRect[f][0], furnRect[f][1]), 1);
+				}
 			}
 
 			if(innerP.size() > 1)
-			{
-				//JOptionPane.showMessageDialog(null, hpf.getName());
-				
+			{				
 				LineSegement ls = new LineSegement(innerP.get(0), innerP.get(1));
 				
-				List<Points> snapPList = calcSnapCoordinate(ls, ls, (0.5f * DOOR_ACCESSBOX_DEPTH), room, tolerance);
+				List<Points> snapPList = calcSnapCoordinate(ls, ls, (0.5f * ACCESSBOX_DEPTH), room, tolerance);
 				
 				if(snapPList.size() > 0)
 				{
 					accBoxCount++;
 					
 					Points p = snapPList.get(0);
-					putMarkers(p, 3);
+					//putMarkers(p, 3);
 					
-					accBoxFurn.setName("DoorAccBox" + accBoxCount);
+					accBoxFurn.setName(accessBoxName);
 					accBoxFurn.setX(p.x);
 					accBoxFurn.setY(p.y);
+					accBoxFurn.setDepth(ACCESSBOX_DEPTH);
 					accBoxFurn.setWidth(hpf.getWidth());
-					accBoxFurn.setDepth(DOOR_ACCESSBOX_DEPTH);
 					accBoxFurn.setAngle(hpf.getAngle());
 					
 					home.addPieceOfFurniture(accBoxFurn);
 				}
-			}
-			
+				else
+					JOptionPane.showMessageDialog(null, "No valid co-ords!!!");
+			}			
 		}
 		
 		public void cleanupMarkers()
@@ -2208,6 +2229,7 @@ public class PhoenixPCS extends Plugin
 		
 		public List<Points> calcSnapCoordinate(LineSegement ws, LineSegement ls, float dist, Room r, float tolr) 
 		{
+			List<Points> finalPList = new ArrayList<Points>();
 			List<Points> retPList = new ArrayList<Points>();
 			
 			Points wsMidP = new Points(((ws.startP.x + ws.endP.x)/2.0f),(ws.startP.y + ws.endP.y)/2.0f);
@@ -2230,14 +2252,13 @@ public class PhoenixPCS extends Plugin
 					Points p1 = new Points(centerP.x, (centerP.y + dist));
 					Points p2 = new Points(centerP.x, (centerP.y - dist));
 					
-					//JOptionPane.showMessageDialog(null, "1_ p1 : " + p1.x + ", " + p1.y + ",\np2 : " + p2.x + ", " + p2.y);
+					JOptionPane.showMessageDialog(null, "1_ p1 : " + p1.x + ", " + p1.y + ",\np2 : " + p2.x + ", " + p2.y);
 					
 					List<Points> interPList2 = new ArrayList<Points>();
 					interPList2.add(p1);
 					interPList2.add(p2);
 					
-					List<Points> sortedPList2 = sortPList(interPList2, wsMidP);
-					retPList.addAll(sortedPList2);
+					retPList.addAll(interPList2);
 				}
 				else if(yLimit >= tolr)
 				{
@@ -2269,8 +2290,7 @@ public class PhoenixPCS extends Plugin
 					interPList1.add(p1);
 					interPList1.add(p2);
 					
-					List<Points> sortedPList1 = sortPList(interPList1, wsMidP);
-					retPList.addAll(sortedPList1);
+					retPList.addAll(interPList1);
 				}
 				else if(xLimit >= tolr)
 				{
@@ -2301,8 +2321,7 @@ public class PhoenixPCS extends Plugin
 					interPList2.add(p1);
 					interPList2.add(p2);
 					
-					List<Points> sortedPList2 = sortPList(interPList2, wsMidP);
-					retPList.addAll(sortedPList2);
+					retPList.addAll(interPList2);
 				}
 				else if(yLimit >= tolr)
 				{
@@ -2320,19 +2339,15 @@ public class PhoenixPCS extends Plugin
 				//JOptionPane.showMessageDialog(null, slopePerp + "/ interceptPerp : " + intercept);
 			}
 			
-			List<Points> sortedPList = sortPList(retPList, wsMidP);
-			
-			for(int p = 0 ; p < sortedPList.size(); p++)
+			for(Points pt : retPList)
 			{
-				Points pt = sortedPList.get(p);
+				//putMarkers(pt, 5);
 				
-				if(!r.containsPoint(pt.x, pt.y, ROOM_TOLERANCE))
-					sortedPList.remove(p);
-				
-				//putMarkers(p, 3);
+				if(r.containsPoint(pt.x, pt.y, ROOM_TOLERANCE))
+					finalPList.add(pt);
 			}
 
-			return sortedPList;
+			return finalPList;
 		}
 		
 		public List<Points> getIntersectionCircleLine2(Points center, float rad, float slope, float intercept)
