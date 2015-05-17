@@ -37,7 +37,7 @@ public class PhoenixPathway
 	public float ROOM_TOLERANCE = 0.51f;
 	public float FURN_TOLERANCE = 0.51f;
 	
-	public float DINING_DISTANCE = 75.0f;  // 2 feet
+	public float DINING_DISTANCE = 75.0f;  // 2.5 feet
 	
 	public double MAX_ANGLE = (180 * (float)(Math.PI/180));
 	public double ANGLE_ADJUSTMENT = -(20 * (float)(Math.PI/180));
@@ -46,6 +46,7 @@ public class PhoenixPathway
 	public float tolerance = 0.5f; // 5 mm
 	
 	public boolean bStop = false;		
+	public boolean bNoSegment = false;	
 	
 	public List<List<List<LineSegement>>> supMasterNewSegList = new ArrayList<List<List<LineSegement>>>();
 	
@@ -146,6 +147,9 @@ public class PhoenixPathway
 
 			while(!bStop)
 			{
+				bNoSegment = false;
+				//JOptionPane.showMessageDialog(null, "pathway loopcount : " + loopCount);
+						
 				loopCount++;
 				
 				if(loopCount > 10)
@@ -161,7 +165,11 @@ public class PhoenixPathway
 				listIndx = -1;
 				
 				if((masterNewSegList == null) || (masterNewSegList.size() < 1))
+				{
+					bNoSegment = true;
 					bStop = true;
+					break;
+				}
 					
 				for(List<LineSegement> lsList : masterNewSegList)
 				{	
@@ -205,13 +213,17 @@ public class PhoenixPathway
 			
 			long endTime = System.nanoTime();				
 			
-			bSuccess = true;
+			if(!bNoSegment)
+				bSuccess = true;
+			else
+				bSuccess = false;
+			
 			generatePathwayTrace();
 			
 			masterNewSegList = new ArrayList<List<LineSegement>>();
 			bStop = false;
 			
-			//JOptionPane.showMessageDialog(null, "Time : " + (endTime - startTime) + " ns \n loopCount : " + loopCount);
+			//JOptionPane.showMessageDialog(null, "Time : " + (endTime - startTime) + " ns \n" + bSuccess +" -> loopCount : " + loopCount);
 		}
 		catch(Exception e)
 		{
@@ -281,7 +293,10 @@ public class PhoenixPathway
 			}
 		}
 		else
+		{
+			bNoSegment = true;
 			bStop = true;
+		}
 		
 		return newArcSegList;
 	}
@@ -321,7 +336,10 @@ public class PhoenixPathway
 			}
 		}
 		else
+		{
+			bNoSegment = true;
 			bStop = true;
+		}
 		
 		return newArcSegList;
 	}
@@ -345,7 +363,7 @@ public class PhoenixPathway
 					bRet = true;
 					
 					if(bShowMarker || bShowPathway)
-						putMarkers(p, 4);
+						putMarkers(p, 0);
 					
 					break;
 				}
@@ -553,6 +571,7 @@ public class PhoenixPathway
 		}
 		else
 		{
+			bNoSegment = false;
 			bStop = true;
 			
 			if(bShowMarker || bShowPathway)
@@ -901,9 +920,9 @@ public class PhoenixPathway
 	{			
 		for(HomePieceOfFurniture hp: h.getFurniture())
 		{
-			String fName = hp.getName();
+			String fName = hp.getName().toLowerCase();
 			
-			if(!fName.equals("boxred") && !fName.equals("boxgreen") )
+			if(!markBoxName.contains(fName) && !fName.contains("accbox"))
 			{
 				//furnList.add(hp);
 				

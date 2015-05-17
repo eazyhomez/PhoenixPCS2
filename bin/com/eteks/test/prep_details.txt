@@ -1,7 +1,9 @@
 Modifications:
 --------------
 1. Add Accessibility boxes for doors
-
+2. Add Accessibility boxes for windows and wall openings
+3. Do not consider windows, balcony doors and wall opening for FWS
+4. Do not place media cabinet in PCS
 
 --------------------------------------------------------------------------------------------------------------------
 

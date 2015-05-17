@@ -1435,7 +1435,7 @@ public class PhoenixPCS extends Plugin
 			{				
 				LineSegement ls = new LineSegement(ws);
 
-				Accessibility accessBox = new Accessibility(false, 0.0f, 0.0f);
+				Accessibility accessBox = new Accessibility(true, 0.0f, 0.0f);
 
 				HomePieceOfFurniture hpfP = pcsRect.clone();
 				hpfP.setName(pcsRect.getName() + "_" + counter);
