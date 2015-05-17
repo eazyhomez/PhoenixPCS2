@@ -517,6 +517,8 @@ public class PhoenixPCS extends Plugin
 			bckWall = null;
 			
 			List<HomePieceOfFurniture> pcsFurnList = new ArrayList<HomePieceOfFurniture>();
+			List<HomePieceOfFurniture> realFurnList = new ArrayList<HomePieceOfFurniture>();
+			
 			List<Integer> refIndxList = new ArrayList<Integer>();
 			
 			//HomePieceOfFurniture accBox = getFurnItem("accBox").clone();
@@ -544,64 +546,29 @@ public class PhoenixPCS extends Plugin
 				
 				float furnX = refOrigin.x + seatingConf[f][1];
 				float furnY = refOrigin.y + seatingConf[f][2];
-				float furnAng = (((float) (Math.PI * seatingConf[f][3])) / 180.0f);
+				float furnAng =  (((float) (Math.PI * seatingConf[f][3])) / 180.0f);
 					
-				JOptionPane.showMessageDialog(null, furnName + " -> X+ : " + seatingConf[f][1] + ", Y+ : " + seatingConf[f][2]);
+				JOptionPane.showMessageDialog(null, furnName + " -> pcsAngle : " + pcsAngle + ", furnAng : " + furnAng);
 				
 				HomePieceOfFurniture hpf = getFurnItem(furnName).clone();
 				hpf.setName(furnType + "_" + furnName + "_" + seatingIndx + "_" + f);
 				hpf.setX(furnX);				
 				hpf.setY(furnY);					
 				hpf.setAngle(furnAng);
-				pcsFurnList.add(hpf);
+				
+				storeFurnParams(hpf);
+				boolean bIntersects = checkIntersectWithAllFurns(hpf, false, true);
+				
+				if(!bIntersects)
+				{
+					home.addPieceOfFurniture(hpf);
+					pcsFurnList.add(hpf);
+				}
+				
+				clearFurnParams(hpf);
 				
 				//JOptionPane.showMessageDialog(null, furnAng);
 			}
-			
-			HomeFurnitureGroup furnGrp = new HomeFurnitureGroup(pcsFurnList, (pcsRect.getName() + "_Group"));
-			List<HomePieceOfFurniture> realFurnList = new ArrayList<HomePieceOfFurniture>();
-			
-			float grpAng = furnGrp.getAngle();
-			
-			furnGrp.setX(pcsRect.getX());
-			furnGrp.setY(pcsRect.getY());
-			//furnGrp.setWidth(pcsRect.getWidth());
-			//furnGrp.setDepth(pcsRect.getDepth());
-			furnGrp.setAngle(pcsAngle + grpAng);
-			
-			float[][] furnGrpRect = furnGrp.getPoints();
-			Points fG0 = new Points(furnGrpRect[0][0], furnGrpRect[0][1]);			
-			putMarkers(fG0, 2);
-			
-			Points fG2 = new Points(furnGrpRect[2][0], furnGrpRect[2][1]);			
-			putMarkers(fG2, 3);
-			
-			for(HomePieceOfFurniture hp : furnGrp.getFurniture())
-			{
-				storeFurnParams(hp);
-				boolean bIntersects = checkIntersectWithAllFurns(hp, false, true);		// do not ignore AccBox as of now
-				
-				// Debug
-				home.addPieceOfFurniture(hp); 
-				
-				JOptionPane.showMessageDialog(null, hp.getName() + ", bIntersects : " + bIntersects);					
-				
-				clearFurnParams(hp);
-				
-				if(bIntersects)
-				{
-					cleanupRealFurnAndWall(furnGrp.getFurniture(), bckWall);
-					home.deletePieceOfFurniture(pcsRect);
-					
-					// Debug
-					home.deletePieceOfFurniture(hp);
-					return;
-				}
-				
-				//home.addPieceOfFurniture(hp);
-			}
-			
-			//----> home.deletePieceOfFurniture(pcsRect);	
 			
 			List<Points> accPList = getAccessbilityPoints(pcsRect, (ACCESS_CHECK_SIZE / 2), tolerance);
 			
@@ -638,23 +605,20 @@ public class PhoenixPCS extends Plugin
 					
 					if(bSuccess)
 					{						
-						realFurnList = populateFurn(furnGrp, refIndxList);
+						//realFurnList = populateFurn(pcsFurnList, refIndxList);
 						
 						//JOptionPane.showMessageDialog(null, "PCS Design generated !!!");
 						
-						if(realFurnList.size() > 0)
+						//if(realFurnList.size() > 0)
 						{
 							//saveDesign(home, name);
 							validDesignCount++;
 						}
 					}
-					else
-						cleanupRealFurnAndWall(furnGrp.getFurniture(), bckWall);
 					
+					cleanupRealFurnAndWall(pcsFurnList, bckWall);
 					cleanupRealFurnAndWall(realFurnList, bckWall);
-					cleanupMarkers();
-					furnGrp.setAngle(0.0f);
-					
+					cleanupMarkers();		
 				}
 				catch(Exception e)
 				{
@@ -662,9 +626,7 @@ public class PhoenixPCS extends Plugin
 					
 					if(home != null)
 					{
-						home.deletePieceOfFurniture(accBox);					
-						furnGrp.setAngle(0.0f);
-						
+						home.deletePieceOfFurniture(accBox);						
 						cleanupRealFurnAndWall(realFurnList, bckWall);
 					}
 				}
@@ -672,9 +634,7 @@ public class PhoenixPCS extends Plugin
 				{
 					if(home != null)
 					{
-						home.deletePieceOfFurniture(accBox);					
-						furnGrp.setAngle(0.0f);
-						
+						home.deletePieceOfFurniture(accBox);
 						cleanupRealFurnAndWall(realFurnList, bckWall);
 					}
 				}
@@ -683,13 +643,13 @@ public class PhoenixPCS extends Plugin
 				JOptionPane.showMessageDialog(null, "Accessibility points not found !!!");
 		}
 			
-		public List<HomePieceOfFurniture> populateFurn(HomeFurnitureGroup furnGrp, List<Integer> refIndxList)
+		public List<HomePieceOfFurniture> populateFurn(List<HomePieceOfFurniture> inFurnList, List<Integer> refIndxList)
 		{		
 			List<HomePieceOfFurniture> hpList = new ArrayList<HomePieceOfFurniture>();
 			
-			for(int h = 0; h <furnGrp.getFurniture().size(); h++)
+			for(int h = 0; h < inFurnList.size(); h++)
 			{
-				HomePieceOfFurniture hp = furnGrp.getFurniture().get(h);
+				HomePieceOfFurniture hp = inFurnList.get(h);
 				int prefIndx = seatingPref[refIndxList.get(h)];
 				
 				String[] nameStr = hp.getName().split("_");
