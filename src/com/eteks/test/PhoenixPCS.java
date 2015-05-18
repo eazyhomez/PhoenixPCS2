@@ -1380,6 +1380,9 @@ public class PhoenixPCS extends Plugin
 				Float minDist = distMap.firstKey();
 				LineSegement minLS = distMap.get(minDist);
 				
+				Points midMinLS = new Points(((minLS.startP.x + minLS.endP.x)/2.0f),(minLS.startP.y + minLS.endP.y)/2.0f);	
+				putMarkers(midMinLS, 5);
+				
 				if(minDist > SHIFT_TOLERANCE)
 					continue;
 				
@@ -1406,19 +1409,19 @@ public class PhoenixPCS extends Plugin
 
 					if(bValid)
 					{
-						float currX = hpRef.getX();
-						float currY = hpRef.getY();
-
-						float newX = (currX + furnCenter.x) / 2.0f;
-						float newY = (currY + furnCenter.y) / 2.0f;
-
-						hpRef.setX(newX);
-						hpRef.setY(newY);
-
-						float elongLen = calcDistance(new Points(currX, currY), furnCenter);
-
 						if(f == 0)
 						{
+							float currX = hpRef.getX();
+							float currY = hpRef.getY();
+
+							float newX = (currX + furnCenter.x) / 2.0f;
+							float newY = (currY + furnCenter.y) / 2.0f;
+
+							hpRef.setX(newX);
+							hpRef.setY(newY);
+
+							float elongLen = calcDistance(new Points(currX, currY), furnCenter);
+							
 							float currDep = hpRef.getDepth();
 							hpRef.setDepth(currDep + elongLen);
 
@@ -1447,6 +1450,17 @@ public class PhoenixPCS extends Plugin
 						{
 							if(!bShiftedD)
 							{
+								float currX = hpRef.getX();
+								float currY = hpRef.getY();
+
+								float newX = (currX + furnCenter.x) / 2.0f;
+								float newY = (currY + furnCenter.y) / 2.0f;
+
+								hpRef.setX(newX);
+								hpRef.setY(newY);
+
+								float elongLen = calcDistance(new Points(currX, currY), furnCenter);
+								
 								float currWid = hpRef.getWidth();
 								hpRef.setWidth(currWid + elongLen);
 
@@ -1471,7 +1485,7 @@ public class PhoenixPCS extends Plugin
 							else
 							{	
 								furnCenter = new Points(hpRef.getX(), hpRef.getY());
-								bSnapped = true;
+								bSnapped = true;								
 								break;
 							}
 						}
@@ -1487,6 +1501,7 @@ public class PhoenixPCS extends Plugin
 					break;
 			}
 			
+			JOptionPane.showMessageDialog(null, "Finally Here --");
 			finalRectList.add(hpRef.clone());
 
 			return finalRectList;
@@ -1669,11 +1684,11 @@ public class PhoenixPCS extends Plugin
 				{
 					finalWSList.add(ws);
 					
-					//if(bShowMarker)
+					if(bShowMarker)
 					{
 						Points midFWS = new Points(((ws.startP.x + ws.endP.x)/2.0f),((ws.startP.y + ws.endP.y)/2.0f));
 						putMarkers(midFWS, 1);
-						JOptionPane.showMessageDialog(null, "!!!");
+						//JOptionPane.showMessageDialog(null, "!!!");
 					}
 					
 				}

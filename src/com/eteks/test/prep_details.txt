@@ -4,7 +4,7 @@ Modifications:
 2. Add Accessibility boxes for windows and wall openings
 3. Do not consider windows, balcony doors and wall opening for FWS
 4. Place media cabinet place-holder in PCS
-5. Shift and Snap - WIP
+5. Shift and Snap - WIP 2 (xxx)
 --------------------------------------------------------------------------
 
 Prep:
