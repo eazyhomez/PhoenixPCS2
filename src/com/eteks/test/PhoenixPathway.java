@@ -57,8 +57,8 @@ public class PhoenixPathway
 	public int MARKBOX_COUNT = 6;
 	public HomePieceOfFurniture[] markBoxes = new HomePieceOfFurniture[MARKBOX_COUNT];
 	
-	public boolean bShowMarker = false;
-	public boolean bShowPathway = false;
+	public boolean bShowMarker = true;
+	public boolean bShowPathway = true;
 	
 	public UserPreferences userPref;
 	
@@ -148,7 +148,7 @@ public class PhoenixPathway
 			while(!bStop)
 			{
 				bNoSegment = false;
-				//JOptionPane.showMessageDialog(null, "pathway loopcount : " + loopCount);
+				JOptionPane.showMessageDialog(null, "pathway loopcount : " + loopCount);
 						
 				loopCount++;
 				
