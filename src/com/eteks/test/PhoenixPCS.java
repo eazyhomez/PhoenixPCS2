@@ -79,6 +79,7 @@ public class PhoenixPCS extends Plugin
 
 		public float FURNITURE_BLOAT_SIZE = 5.0f;	// 5cm
 
+		public float TAN_MAX_VAL = 60.0f; 
 		public float INFINITY = 10000.0f; 
 
 		public float CONV_IN_M = 100.0f;
@@ -131,7 +132,7 @@ public class PhoenixPCS extends Plugin
 
 		public String pcsAccBoxNamePrefix = "PCSAccessBox";
 		
-		public boolean bPopulateFurn = false;
+		public boolean bPopulateFurn = true;
 		public boolean bSaveDesign = false;
 		
 		public float SHIFT_TOLERANCE = 152.4f;
@@ -388,7 +389,7 @@ public class PhoenixPCS extends Plugin
 				 */
 
 				// 4. Config check  ------- //
-				/*
+				
 				HomePieceOfFurniture hpfTest = searchMatchFurn("PCSRect");
 
 				int[][] testArr = FOUR_SEATER_DESIGN_RANGE;
@@ -408,12 +409,12 @@ public class PhoenixPCS extends Plugin
 
 				testArr = NINE_SEATER_DESIGN_RANGE;
 				testConf(hpfTest, testArr);
-				 */
+				 
 
 				// 5. Increase the length of PCS rect to expand it till the back wall if free  ------- //
 
 				// ==================== Demo ========================= //
-
+				/*
 				getLivingRoom();
 				float[][] livinRect = livingRoom.getPoints();
 
@@ -438,6 +439,8 @@ public class PhoenixPCS extends Plugin
 						int pcsSeatingIndx = pcsConfArr[x][1];
 						int pcsWallPrefIndx = pcsConfArr[x][2];
 
+						JOptionPane.showMessageDialog(null, "Config :" + pcsConfIndx + "," + pcsSeatingIndx + "," + pcsWallPrefIndx);
+								
 						HomePieceOfFurniture pcsRect = getFurnItem("PCSRect").clone();
 						pcsRect.setName("PCSRect_" + nameCounter);
 						pcsRect.setWidth(pcsConfigList.get(pcsConfIndx).w);
@@ -448,7 +451,7 @@ public class PhoenixPCS extends Plugin
 						nameCounter++;
 					}					
 				}
-				
+				*/
 				long endTime = System.currentTimeMillis(); //System.nanoTime();				
 				//JOptionPane.showMessageDialog(null, "No. of Designs generated : " + validDesignCount);
 
@@ -533,8 +536,10 @@ public class PhoenixPCS extends Plugin
 
 			float pcsAngle = pcsRect.getAngle();
 
-			float[][] seatingConf = getSeatingConfigList(PCS_RECT_D1, pcsRect.getDepth(), seatingIndx);
+			float[][] seatingConf = getSeatingConfigList(PCS_RECT_W, (pcsRect.getDepth()/CONV_FT_CM), (pcsRect.getWidth()/CONV_FT_CM), seatingIndx);
 
+			//JOptionPane.showMessageDialog(null, "seatingConf : " + seatingIndx + "\n\n" + Arrays.deepToString(seatingConf).replaceAll("],", "],\n"));
+			
 			for(int f = 0; f < seatingConf.length; f++)
 			{						
 				int furnType = new Float(seatingConf[f][0]).intValue();
@@ -591,6 +596,7 @@ public class PhoenixPCS extends Plugin
 
 				clearFurnParams(hp);
 
+				/*--->
 				if(bIntersects)
 				{
 					cleanupRealFurnAndWall(furnGrp.getFurniture(), bckWall);
@@ -600,7 +606,7 @@ public class PhoenixPCS extends Plugin
 					home.deletePieceOfFurniture(hp);
 					return;
 				}
-
+				*/
 				//home.addPieceOfFurniture(hp);
 			}
 
@@ -629,15 +635,15 @@ public class PhoenixPCS extends Plugin
 					accBox.setAngle(angle);
 					home.addPieceOfFurniture(accBox);
 
-					PhoenixPathway pathway = new PhoenixPathway();
-					boolean bSuccess = pathway.execute(home, getUserPreferences(), accBox);
+					//PhoenixPathway pathway = new PhoenixPathway();
+					boolean bSuccess = true; //pathway.execute(home, getUserPreferences(), accBox);
 
-					JOptionPane.showMessageDialog(null, "bSuccess : " + bSuccess);
+					JOptionPane.showMessageDialog(null, "bSuccess : ");
 
 					home.deletePieceOfFurniture(accBox);
 
 					String name = pcsRect.getName();
-					home.deletePieceOfFurniture(pcsRect);
+					//---> home.deletePieceOfFurniture(pcsRect);
 
 					if(bSuccess)
 					{		
@@ -922,411 +928,556 @@ public class PhoenixPCS extends Plugin
 			pcsConfigList.add(pcsConf);
 		}
 
-		
-
-		public float[][] getSeatingConfigList(float x, float y, int seatingConfigIndx)
+		public float[][] getSeatingConfigList(float x, float y, float w, int seatingConfigIndx)
 		{
 			float[][] retSeatingConfig = new float [0][0];
 
-			switch(seatingConfigIndx)
+			switch((seatingConfigIndx + 1))
 			{				
 				// -------------------------------- 4 Seater -------------------------------- //
 				case 1: // Seating Config 1
 				{
-					float[][] seatingConf1 = {	{0.0f, (x*0.5f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 270.0f},
-												{1.0f, ((2.0f*x) + 0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{0.0f, ((7.0f*x*0.5f) + 1.0f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 90.0f},	
-												{7.0f, ((2.0f*x) + 0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, ((2.0f*x) + 0.5f)*CONV_FT_CM, ((y*0.5f) + (x*0.25f) + 1.0f)*CONV_FT_CM, 90.0f},
+					float[][] seatingConf1 = {	{0.0f, (x*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 270.0f},
+												{1.0f, (w*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{0.0f, (w - x*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 90.0f},	
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 90.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{10.0f, ((7.0f*x*0.5f) + 1.0f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, ((2.0f*x) + 0.5f)*CONV_FT_CM, ((y*0.5f) + (x*0.25f) + 1.0f)*CONV_FT_CM, 90.0f} };
+												{10.0f, (w - x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 90.0f} };
 	
 					retSeatingConfig = (seatingConf1);
+					break;
 				}
 				case 2: // Seating Config 2
 				{
-					float[][] seatingConf2 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 270.0f},
-												{1.0f, ((2.0f*x) + 0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{7.0f, ((3.0f*x*0.5f) + 0.25f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, ((2.0f*x) + 0.5f)*CONV_FT_CM, ((y*0.5f) + (x*0.25f) + 1.0f)*CONV_FT_CM, 90.0f},
+					float[][] seatingConf2 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 270.0f},
+												{1.0f, (w - x)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f + 1.0f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 90.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, ((2.0f*x) + 0.5f)*CONV_FT_CM, ((y*0.5f) + (x*0.25f) + 1.0f)*CONV_FT_CM, 90.0f} };
+												{11.0f, (w*0.5f + 1.0f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 90.0f} };
 	
 					retSeatingConfig = (seatingConf2);
+					break;
 				}
 				case 3: // Seating Config 3
 				{
 	
 					float[][] seatingConf3 = {	{1.0f, (x)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{1.0f, ((5.0f*x*0.5f) + 0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 90.0f},
-												{7.0f, ((3.0f*x*0.5f) + 0.25f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (x)*CONV_FT_CM, ((y*0.5f) + (x*0.25f) + 1)*CONV_FT_CM, 90.0f},
-												{10.0f, ((5.0f*x*0.5f) + 0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (x)*CONV_FT_CM, ((y*0.5f) + (x*0.25f) + 1.0f)*CONV_FT_CM, 90.0f} };
+												{1.0f, (w - x*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 90.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f - 1.0f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 90.0f},
+												{10.0f, (w - x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f - 1.0f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 90.0f} };
 	
 					retSeatingConfig = (seatingConf3);
+					break;
 				}
 				case 4: // Seating Config 4
 				{
 					float[][] seatingConf4 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (x)*CONV_FT_CM, 270.0f},
-												{1.0f, ((3.0f*x*0.5f) + 5.5f)*CONV_FT_CM, (x)*CONV_FT_CM, 90.0f},	
-												{7.0f, ((x) + 2.75f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, ((x) + 2.75f)*CONV_FT_CM, (x + 0.5f)*CONV_FT_CM, 90.0f},
-												{11.0f, ((x) + 2.75f)*CONV_FT_CM, (x + 0.5f)*CONV_FT_CM, 90.0f}	};
+												{1.0f, (w - x*0.5f)*CONV_FT_CM, (x)*CONV_FT_CM, 90.0f},	
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 90.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 90.0f}	};
 	
 					retSeatingConfig = (seatingConf4);
+					break;
 				}
 				// -------------------------------- 5 Seater -------------------------------- //
 				case 5: // Seating Config 5
 				{
-					float[][] seatingConf5 = {	{0.0f, (x*0.5f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 270.0f},
-												{2.0f, (5.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{0.0f, (9.0f*x*0.5f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 90.0f},	
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, ((2.0f*x) + 0.5f)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf5 = {	{0.0f, (x*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 270.0f},
+												{2.0f, (w*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{0.0f, (w - x*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 90.0f},	
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{10.0f, (9.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, ((2.0f*x) + 0.5f)*CONV_FT_CM, 0.0f}	};
+												{10.0f, (w - x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf5);
+					break;
 				}
 				case 6: // Seating Config 6
 				{
-					float[][] seatingConf6 = {	{2.0f, (3.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{1.0f, (7.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 90.0f},
-												{7.0f, (2.0f*x)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (3.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
-												{10.0f, (7.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (3.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+					float[][] seatingConf6 = {	{2.0f, (x*1.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{1.0f, (w - x*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 90.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, ((w - x)*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f},
+												{10.0f, (w - x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, ((w - x)*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf6);
+					break;
 				}
 				case 7: // Seating Config 7
 				{
-					float[][] seatingConf7 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 270.0f},
-												{2.0f, (5.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{7.0f, (2.0f*x)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+					float[][] seatingConf7 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 270.0f},
+												{2.0f, (w - x*1.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, ((w + x)*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f},
+												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, ((w + x)*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf7);
+					break;
 				}
 				case 8: // Seating Config 8
 				{
-					float[][] seatingConf8 = {	{3.0f, (2.0f*x)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 0.0f},
-												{7.0f, (2.0f*x)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (3.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
-												{11.0f, (3.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+					float[][] seatingConf8 = {	{3.0f, (w - x*2.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 0.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, ((w - x)*0.5f - 1.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
+												{11.0f, ((w - x)*0.5f - 1.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf8);
+					break;
 				}
 				case 9: // Seating Config 9
 				{
-					float[][] seatingConf9 = {	{4.0f, (2.0f*x)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 0.0f},
-												{7.0f, (2.0f*x)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+					float[][] seatingConf9 = {	{4.0f, (x*2.5f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 0.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, ((w + x)*0.5f + 1.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
+												{11.0f, ((w + x)*0.5f + 1.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf9);
+					break;
 				}
 				// -------------------------------- 6 Seater -------------------------------- //
 				case 10: // Seating Config 10
 				{
-					float[][] seatingConf10 = {	{2.0f, (3.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{2.0f, (7.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f},
-												{7.0f, (2.0f*x)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (3.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f},
-												{10.0f, (7.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (3.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f}	};
+					float[][] seatingConf10 = {	{2.0f, (x*1.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{2.0f, (w - x*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 90.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, ((w - x)*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f},
+												{10.0f, (w - x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, ((w - x)*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf10);
+					break;
 				}
 				case 11: // Seating Config 11
 				{
-					float[][] seatingConf11 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 270.0f},
-												{2.0f, (5.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{7.0f, (2.0f*x)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f},
+					float[][] seatingConf11 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 270.0f},
+												{2.0f, (w - x*1.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, ((w + x)*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f}	};
+												{11.0f, ((w + x)*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf11);
+					break;
 				}
 				case 12: // Seating Config 12
 				{
-					float[][] seatingConf12 = {	{5.0f, (2.0f*x)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
-												{7.0f, (2.0f*x)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (3.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f},
-												{11.0f, (3.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f}	};
+					float[][] seatingConf12 = {	{5.0f, (w - x*2.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, ((w - x)*0.5f - 1.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, ((w - x)*0.5f - 1.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f}	};
 						
 					retSeatingConfig = (seatingConf12);
+					break;
 				}
 				case 13: // Seating Config 13
 				{
-					float[][] seatingConf13 = {	{6.0f, (2.0f*x)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
-												{7.0f, (2.0f*x)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f}	};
+					float[][] seatingConf13 = {	{6.0f, (x*2.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, ((w + x)*0.5f + 1.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, ((w + x)*0.5f + 1.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf13);
+					break;
 				}
 				case 14	: // Seating Config 14
 				{
-					float[][] seatingConf14 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 270.0f},
-												{2.0f, (5.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{0.0f, (9.0f*x*0.5f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 90.0f},	
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf14 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 270.0f},
+												{2.0f, (w*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{0.0f, (w - x*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 90.0f},	
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{10.0f, (9.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+												{10.0f, (w - x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf14);
+					break;
 				}
 				case 15: // Seating Config 15
 				{
-					float[][] seatingConf15 = {	{0.0f, (x*0.5f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 270.0f},
-												{2.0f, (5.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{1.0f, (9.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 90.0f},	
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf15 = {	{0.0f, (x*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 270.0f},
+												{2.0f, (w*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{1.0f, (w - x*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 90.0f},	
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{10.0f, (9.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+												{10.0f, (w - x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf15);
+					break;
 				}
 				case 16: // Seating Config 16
 				{
-					float[][] seatingConf16 = {	{4.0f, (2.0f*x)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 0.0f},
-												{0.0f, (9.0f*x*0.5f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 90.0f},	
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
-												{10.0f, (9.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+					float[][] seatingConf16 = {	{4.0f, (x*2.0f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 0.0f},
+												{0.0f, (w - x*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 90.0f},	
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f},
+												{10.0f, (w - x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf16);
+					break;
 				}
 				case 17: // Seating Config 17
 				{
-					float[][] seatingConf17 = {	{0.0f, (x*0.5f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 270.0f},
-												{3.0f, (3.0f*x)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 0.0f},
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf17 = {	{0.0f, (x*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 270.0f},
+												{3.0f, (w - x*2.0f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 0.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf17);
+					break;
 				}
 				case 18: // Seating Config 18
 				{
-					float[][] seatingConf18 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 270.0f},
-												{2.0f, ((3.0f*x*0.5f) + 5.5f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 90.0f},
-												{7.0f, (x + 2.75f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (x + 2.75f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 90.0f},
-												{11.0f, (x + 2.75f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 90.0f}	};
+					float[][] seatingConf18 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 270.0f},
+												{2.0f, (w - (x*0.5f))*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 90.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 90.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 90.0f}	};
 	
 					retSeatingConfig = (seatingConf18);
+					break;
 				}
 				// -------------------------------- 7 Seater -------------------------------- //
 				case 19: // Seating Config 19
 				{
-					float[][] seatingConf19 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 270.0f},
-												{2.0f, (5.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{1.0f, (9.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 90.0f},	
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf19 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 270.0f},
+												{2.0f, (w*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{1.0f, (w - (x*0.5f))*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 90.0f},	
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{10.0f, (9.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+												{10.0f, (w - (x*0.5f))*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf19);
+					break;
 				}
 				case 20: // Seating Config 20
 				{
-					float[][] seatingConf20 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 270.0f},
-												{3.0f, (3.0f*x)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 0.0f},
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf20 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 270.0f},
+												{3.0f, (w - (x*2.0f))*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 0.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf20);
+					break;
 				}
 				case 21: // Seating Config 21
 				{
-					float[][] seatingConf21 = {	{4.0f, (2.0f*x)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 0.0f},
-												{1.0f, (9.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 90.0f},	
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
-												{10.0f, (9.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+					float[][] seatingConf21 = {	{4.0f, (2.0f*x)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 0.0f},
+												{1.0f, (w - (x*0.5f))*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 90.0f},	
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f},
+												{10.0f, (w - (x*0.5f))*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf21);
+					break;
 				}
 				// -------------------------------- 8 Seater -------------------------------- //
 				case 22: // Seating Config 22
 				{
-					float[][] seatingConf22 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 270.0f},
-												{2.0f, (5.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{1.0f, (9.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 90.0f},	
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf22 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 270.0f},
+												{2.0f, (w*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{1.0f, (w - (x*0.5f))*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 90.0f},	
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{10.0f, (9.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+												{10.0f, (w - (x*0.5f))*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf22);
+					break;
 				}
 				case 23: // Seating Config 23
 				{
-					float[][] seatingConf23 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 270.0f},
-												{2.0f, (5.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{2.0f, (9.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f},	
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf23 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 270.0f},
+												{2.0f, (w*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{2.0f, (w - (x*0.5f))*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f},	
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{10.0f, (9.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+												{10.0f, (w - (x*0.5f))*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f}	};
 						
 					retSeatingConfig = (seatingConf23);
+					break;
 				}
 				case 24: // Seating Config 24
 				{
-					float[][] seatingConf24 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 270.0f},
-												{3.0f, (3.0f*x)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 0.0f},
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf24 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 270.0f},
+												{3.0f, (w - x*2.0f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 0.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f}};
 	
 					retSeatingConfig = (seatingConf24);
+					break;
 				}
 				case 25: // Seating Config 25
 				{
 					// Seating Config 25
-					float[][] seatingConf25 = {	{4.0f, (2.0f*x)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 0.0f},
-												{2.0f, (9.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f},	
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
-												{10.0f, (9.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+					float[][] seatingConf25 = {	{4.0f, (2.0f*x)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 0.0f},
+												{2.0f, (w - (x*0.5f))*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 90.0f},	
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
+												{10.0f, (w - (x*0.5f))*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf25);
+					break;
 				}
 				case 26: // Seating Config 26
 				{
-					float[][] seatingConf26 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 270.0f},
-												{1.0f, ((2.0f*x) + 1.0f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},	
-												{2.0f, ((7.0f*x*0.5f) + 2.0f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f},
-												{7.0f, ((2.0f*x) + 1.0f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, ((2.0f*x) + 1.0f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f},
+					float[][] seatingConf26 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 270.0f},
+												{1.0f, (w*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},	
+												{2.0f, (w - (x*0.5f))*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 90.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 90.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{10.0f, ((7.0f*x*0.5f) + 2.0f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, ((2.0f*x) + 1.0f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f}	};
+												{10.0f, (w - (x*0.5f))*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 90.0f}	};
 	
 					retSeatingConfig = (seatingConf26);
+					break;
 				}
 				case 27: // Seating Config 27
 				{
-					float[][] seatingConf27 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 270.0f},
-												{2.0f, ((7.0f*x*0.5f) + 2.0f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 90.0f},
-												{8.0f, ((2.0f*x) + 1.0f)*CONV_FT_CM, (7.0f*x*0.5f)*CONV_FT_CM, 180.0f},	
-												{7.0f, ((2.0f*x) + 1.0f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, ((2.0f*x) + 1.0f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 90.0f},
-												{11.0f, ((2.0f*x) + 1.0f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 90.0f}	};
+					float[][] seatingConf27 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 270.0f},
+												{2.0f, (w - (x*0.5f))*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 90.0f},
+												{8.0f, (w*0.5f)*CONV_FT_CM, (x*3.5f)*CONV_FT_CM, 180.0f},	
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 90.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 90.0f}	};
 	
 					retSeatingConfig = (seatingConf27);
+					break;
 				}
 				// -------------------------------- 9 Seater -------------------------------- //
 				case 28: // Seating Config 28
 				{
-					float[][] seatingConf28 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 270.0f},
-												{2.0f, (5.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},	
-												{1.0f, (9.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 90.0f},
-												{8.0f, (5.0f*x*0.5f)*CONV_FT_CM, (7.0f*x*0.5f)*CONV_FT_CM, 180.0f},
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf28 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 270.0f},
+												{2.0f, (w*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},	
+												{1.0f, (w - (x*0.5f))*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 90.0f},
+												{8.0f, (w*0.5f)*CONV_FT_CM, (x*3.5f)*CONV_FT_CM, 180.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{10.0f, (9.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+												{10.0f, (w - (x*0.5f))*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf28);
+					break;
 				}
 				case 29: // Seating Config 29
 				{
-					float[][] seatingConf29 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 270.0f},
-												{3.0f, (3.0f*x)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 0.0f},
-												{8.0f, (5.0f*x*0.5f)*CONV_FT_CM, (7.0f*x*0.5f)*CONV_FT_CM, 180.0f},
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf29 = {	{1.0f, (x*0.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 270.0f},
+												{3.0f, (w - (x*2.0f))*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 0.0f},
+												{8.0f, (w*0.5f)*CONV_FT_CM, (x*3.5f)*CONV_FT_CM, 180.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+												{11.0f, (w*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
 						
 					retSeatingConfig = (seatingConf29);
+					break;
 				}
 				case 30: // Seating Config 30
 				{
-					float[][] seatingConf30 = {	{4.0f, (2.0f*x)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 0.0f},
-												{1.0f, (9.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 90.0f},
-												{8.0f, (5.0f*x*0.5f)*CONV_FT_CM, (7.0f*x*0.5f)*CONV_FT_CM, 180.0f},
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
-												{10.0f, (9.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
+					float[][] seatingConf30 = {	{4.0f, (x*2.0f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 0.0f},
+												{1.0f, (w - (x*0.5f))*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 90.0f},
+												{8.0f, (w*0.5f)*CONV_FT_CM, (x*3.5f)*CONV_FT_CM, 180.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
+												{10.0f, (w - (x*0.5f))*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf30);
+					break;
 				}
 				case 31: // Seating Config 31
 				{
-					float[][] seatingConf31 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 270.0f},
-												{2.0f, (5.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{2.0f, (9.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f},
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f},
+					float[][] seatingConf31 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 270.0f},
+												{2.0f, (w*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{2.0f, (w - (x*0.5f))*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 90.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 90.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{10.0f, (9.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f}	};
+												{10.0f, (w - (x*0.5f))*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 90.0f}	};
 	
 					retSeatingConfig = (seatingConf31);
+					break;
 				}
 				case 32: // Seating Config 32
 				{
-					float[][] seatingConf32 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 270.0f},
-												{5.0f, (3.0f*x)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf32 = {	{2.0f, (x*0.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 270.0f},
+												{5.0f, (w - (x*2.0f))*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f},
 												{10.0f, (x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 0.0f}	};
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf32);
+					break;
 				}
 				case 33: // Seating Config 33
 				{
-					float[][] seatingConf33 = {	{6.0f, (2.0f*x)*CONV_FT_CM, (2.0f*x)*CONV_FT_CM, 0.0f},
-												{2.0f, (9.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 90.0f},
-												{7.0f, (5.0f*x*0.5f)*CONV_FT_CM, (y + x)*CONV_FT_CM, 180.0f},
-												{9.0f, (5.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 0.0f},
-												{10.0f, (9.0f*x*0.5f)*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, (5.0f*x*0.5f)*CONV_FT_CM, (5.0f*x*0.5f)*CONV_FT_CM, 0.0f}	};
+					float[][] seatingConf33 = {	{6.0f, (x*2.0f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
+												{2.0f, (w - (x*0.5f))*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 90.0f},
+												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
+												{9.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f},
+												{10.0f, (w - (x*0.5f))*CONV_FT_CM, (x*0.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w*0.5f)*CONV_FT_CM, (x*2.25f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf33);
-				}			
+					break;
+				}
+				default:
+				{
+					JOptionPane.showMessageDialog(null, "-x-x-x- No config to select -x-x-x-");
+				}
 			}
 			
 			return retSeatingConfig;
 		}
+		
+		public boolean checkAndSnap(HomePieceOfFurniture hpRef, List<WallSegement> inWSList, float tolr)
+		{		
+			Points furnCenter = new Points(hpRef.getX(), hpRef.getY());			
+			float[][] fRect = hpRef.getPoints();
+			
+			boolean bSnapped = false;	
+			
+			for(int f = 0; f < fRect.length; f++)
+			{
+				cleanupMarkers();
+				
+				if(f == 2)
+					continue;		// Forward snap not needed
+				
+				Points startP = new Points(fRect[f][0], fRect[f][1]);
+				Points endP = null;
 
-		public List<HomePieceOfFurniture> checkAndSnap(HomePieceOfFurniture hpRef, List<WallSegement> inWSList, float tolr)
+				if(f == (fRect.length - 1))
+					endP = new Points(fRect[0][0], fRect[0][1]);
+				else
+					endP = new Points(fRect[f+1][0], fRect[f+1][1]);
+				
+				LineSegement fs = new LineSegement(startP, endP);
+				
+				//putMarkers(startP, 2);
+				//putMarkers(endP, 2);
+						
+				for(WallSegement ws : inWSList)
+				{					
+					LineSegement ls = new LineSegement(ws);
+					
+					boolean bIsParallel = isParallelToFace(fs, ls, tolr);
+					
+					if(bIsParallel)
+					{
+						Points wsMidP = new Points(((ls.startP.x + ls.endP.x)/2),(ls.startP.y + ls.endP.y)/2);
+						putMarkers(wsMidP, 6);
+						
+						float dist = calcDistanceParallel(fs, ls, tolr);
+						
+						//JOptionPane.showMessageDialog(null, dist + " -> " + f);
+								
+						if(dist <= SNAP_TOLERANCE)
+						{
+							List<Points> snapPList = calcSnapCoordinate(ls, fs, dist, livingRoom, tolr);
+							
+							for(Points snapP : snapPList)
+							{
+								Points centerFS = new Points(((fs.startP.x + fs.endP.x)/2.0f),(fs.startP.y + fs.endP.y)/2.0f);								
+								
+								Points snapCoords = new Points((snapP.x - centerFS.x), (snapP.y - centerFS.y));	
+								
+								hpRef.setX(furnCenter.x + snapCoords.x);
+								hpRef.setY(furnCenter.y + snapCoords.y);
+								
+								//putMarkers(new Points(hpRef.getX(), hpRef.getY()), 6);
+								
+								boolean bValid = false;
+								
+								boolean bLiesOnWall = checkFace(hpRef.getPoints(), f, inWSList, tolr);
+								
+								//JOptionPane.showMessageDialog(null, "bLiesOnWall : " + bLiesOnWall + ", " + f);
+										
+								if(!bLiesOnWall)
+								{
+									hpRef.setX(furnCenter.x);
+									hpRef.setY(furnCenter.y);
+								}
+								else
+								{
+									bValid = checkInsideRoom(livingRoom, hpRef.getPoints(), PLACEMENT_TOLERANCE);
+								}
+								
+								if(bValid)
+								{
+									//JOptionPane.showMessageDialog(null, "checkAndSnap - bValid : " + bValid);
+									
+									furnCenter = new Points(hpRef.getX(), hpRef.getY());																		
+									//Points p = new Points(furnCenter.x, furnCenter.y);
+									//putMarkers(p, 3);
+									
+									if(f != 0)
+									{
+										bSnapped = true;
+										//JOptionPane.showMessageDialog(null, "Snappedddd"  + ", " + f);
+										
+										break;
+									}								
+								}
+								else
+								{
+									hpRef.setX(furnCenter.x);
+									hpRef.setY(furnCenter.y);
+								}
+							}								
+						}
+					}
+					
+					if(bSnapped)
+						break;				
+				}
+				
+				if(bSnapped)
+					break;
+			}
+			
+			boolean bInRoom = checkInsideRoom(livingRoom, hpRef.getPoints(), PLACEMENT_TOLERANCE);
+			
+			return bInRoom;
+		}
+
+		public HomePieceOfFurniture checkAndShift(HomePieceOfFurniture hpRef, List<WallSegement> inWSList, float tolr)
 		{
 			cleanupMarkers();
 			
-			JOptionPane.showMessageDialog(null, "Initial position");
+			//JOptionPane.showMessageDialog(null, "Initial position");
 			
-			List<HomePieceOfFurniture> finalRectList = new ArrayList<HomePieceOfFurniture>();
-			
-			boolean bSnapped = false;
+			boolean bShifted = false;
 			boolean bShiftedD = false;
 			
 			Points furnCenter = new Points(hpRef.getX(), hpRef.getY());
@@ -1357,7 +1508,7 @@ public class PhoenixPCS extends Plugin
 				{					
 					LineSegement ls = new LineSegement(ws);
 
-					boolean bIsParallel = isParallel(fs, ls, tolr);
+					boolean bIsParallel = isParallelToFace(fs, ls, tolr);
 
 					if(bIsParallel)
 					{
@@ -1366,7 +1517,7 @@ public class PhoenixPCS extends Plugin
 
 						boolean bOnSameSide = checkPointOnSameSide(wsMidP, furnCenter, fs.startP, fs.endP);
 						
-						//if(!bOnSameSide)
+						if(!bOnSameSide)
 						{
 							Float dist = calcDistanceParallel(fs, ls, tolr);
 							distMap.put(dist, ls);
@@ -1381,7 +1532,7 @@ public class PhoenixPCS extends Plugin
 				LineSegement minLS = distMap.get(minDist);
 				
 				Points midMinLS = new Points(((minLS.startP.x + minLS.endP.x)/2.0f),(minLS.startP.y + minLS.endP.y)/2.0f);	
-				putMarkers(midMinLS, 5);
+				//putMarkers(midMinLS, 5);
 				
 				if(minDist > SHIFT_TOLERANCE)
 					continue;
@@ -1390,7 +1541,7 @@ public class PhoenixPCS extends Plugin
 
 				for(Points snapP : snapPList)
 				{
-					putMarkers(snapP, 3);
+					//putMarkers(snapP, 3);
 					
 					Points centerFS = new Points(((fs.startP.x + fs.endP.x)/2.0f),(fs.startP.y + fs.endP.y)/2.0f);								
 
@@ -1402,7 +1553,7 @@ public class PhoenixPCS extends Plugin
 
 					boolean bLiesOnWall = checkFace(hpRef.getPoints(), f, inWSList, tolr);
 
-					JOptionPane.showMessageDialog(null, minDist + ", bLiesOnWall : " + bLiesOnWall + ", " + f);
+					//JOptionPane.showMessageDialog(null, minDist + ", bLiesOnWall : " + bLiesOnWall + ", " + f);
 
 					boolean bValid = false;
 					bValid = checkInsideRoom(livingRoom, hpRef.getPoints(), PLACEMENT_TOLERANCE);
@@ -1425,7 +1576,7 @@ public class PhoenixPCS extends Plugin
 							float currDep = hpRef.getDepth();
 							hpRef.setDepth(currDep + elongLen);
 
-							JOptionPane.showMessageDialog(null, "Shift - D !!!");
+							//JOptionPane.showMessageDialog(null, "Shift - D !!!");
 							
 							boolean bInRoom = checkInsideRoom(livingRoom, hpRef.getPoints(), PLACEMENT_TOLERANCE);
 							
@@ -1438,7 +1589,7 @@ public class PhoenixPCS extends Plugin
 								hpRef.setX(currX);
 								hpRef.setY(currY);
 								hpRef.setDepth(currDep);
-								JOptionPane.showMessageDialog(null, "UNShift - D xxx");
+								//JOptionPane.showMessageDialog(null, "UNShift - D xxx");
 							}
 
 							furnCenter = new Points(hpRef.getX(), hpRef.getY());
@@ -1464,7 +1615,7 @@ public class PhoenixPCS extends Plugin
 								float currWid = hpRef.getWidth();
 								hpRef.setWidth(currWid + elongLen);
 
-								JOptionPane.showMessageDialog(null, "Shift - W !!!");
+								//JOptionPane.showMessageDialog(null, "Shift - W !!!");
 								
 								boolean bInRoom = checkInsideRoom(livingRoom, hpRef.getPoints(), PLACEMENT_TOLERANCE);
 								
@@ -1474,7 +1625,7 @@ public class PhoenixPCS extends Plugin
 									hpRef.setY(currY);
 									
 									hpRef.setWidth(currWid);
-									JOptionPane.showMessageDialog(null, "UNShift - W xxx");
+									//JOptionPane.showMessageDialog(null, "UNShift - W xxx");
 								}
 								
 								furnCenter = new Points(hpRef.getX(), hpRef.getY());
@@ -1485,7 +1636,7 @@ public class PhoenixPCS extends Plugin
 							else
 							{	
 								furnCenter = new Points(hpRef.getX(), hpRef.getY());
-								bSnapped = true;								
+								bShifted = true;								
 								break;
 							}
 						}
@@ -1497,17 +1648,13 @@ public class PhoenixPCS extends Plugin
 					}
 				}								
 			
-				if(bSnapped)
+				if(bShifted)
 					break;
 			}
 			
-			JOptionPane.showMessageDialog(null, "Finally Here --");
-			finalRectList.add(hpRef.clone());
-
-			return finalRectList;
+			//JOptionPane.showMessageDialog(null, "Finally Here --");
+			return hpRef.clone();
 		}
-
-
 
 		public boolean checkFace(float[][] fRect, int indx, List<WallSegement> inWSList, float tolr)
 		{
@@ -1578,20 +1725,21 @@ public class PhoenixPCS extends Plugin
 					HomePieceOfFurniture hpPlaced = searchMatchFurn(hpfP.getName());						
 					chkFurnOrient(hpPlaced, ws);		// returns orientation (180*)
 
-					List<HomePieceOfFurniture> hpList = checkAndSnap(hpPlaced, inWSList, tolr);
+					HomePieceOfFurniture hpShift = checkAndShift(hpPlaced, inWSList, tolr);
 
+					boolean bValid = checkAndSnap(hpShift, inWSList, tolr);
 					//JOptionPane.showMessageDialog(null, "bValid : " + bValid);
 
-					for(HomePieceOfFurniture hp : hpList)
+					if(bValid)
 					{
-						bSuccess = checkInsideHome(finalWSList, hp, PLACEMENT_TOLERANCE);
+						bSuccess = checkInsideHome(finalWSList, hpShift, PLACEMENT_TOLERANCE);
 
 						//JOptionPane.showMessageDialog(null, "bSuccess : " + bSuccess);
 
 						if(bSuccess)
 						{	
 							//JOptionPane.showMessageDialog(null, "bSuccess : " + bSuccess);
-							//placeFurnBoxes(hp, pcsSeatingIndx);
+							placeFurnBoxes(hpShift, pcsSeatingIndx);
 						}
 					}
 
@@ -3464,13 +3612,53 @@ public class PhoenixPCS extends Plugin
 			else
 				slope2 = ((ls2.endP.y - ls2.startP.y) / (ls2.endP.x - ls2.startP.x));
 
+			// Rounding off slope values as per max "tan()" value
+			slope1 = (slope1 >= TAN_MAX_VAL) ? INFINITY : slope1;
+			slope2 = (slope2 >= TAN_MAX_VAL) ? INFINITY : slope2;
+			
 			//JOptionPane.showMessageDialog(null, Math.abs(ls1.endP.x - ls1.startP.x) + ", " + Math.abs(ls2.endP.x - ls2.startP.x));
-
+			
 			isPara = (Math.abs(slope1 - slope2) < SLOPE_TOLERANCE) ? true : false;
 
 			return isPara;
 		}
 
+		public boolean isParallelToFace(LineSegement ls1, LineSegement ls2, float tolr)
+		{
+			boolean isPara = false;
+
+			float slope1 = -100.0f;
+			float slope2 = -100.0f;
+
+			if(Math.abs(ls1.endP.x - ls1.startP.x) <= tolr)
+				slope1 = INFINITY;
+			else
+				slope1 = Math.abs((ls1.endP.y - ls1.startP.y) / (ls1.endP.x - ls1.startP.x));
+
+			if(Math.abs(ls2.endP.x - ls2.startP.x) <= tolr)
+				slope2 = INFINITY;
+			else
+				slope2 = Math.abs((ls2.endP.y - ls2.startP.y) / (ls2.endP.x - ls2.startP.x));
+
+			//JOptionPane.showMessageDialog(null, Math.abs(ls1.endP.x - ls1.startP.x) + ", " + Math.abs(ls2.endP.x - ls2.startP.x));
+			
+			// Rounding off slope values as per max "tan()" value
+			slope1 = (slope1 >= TAN_MAX_VAL) ? INFINITY : slope1;
+			slope2 = (slope2 >= TAN_MAX_VAL) ? INFINITY : slope2;
+			
+			Points ls1MidP = new Points(((ls1.startP.x + ls1.endP.x)/2),(ls1.startP.y + ls1.endP.y)/2);
+			putMarkers(ls1MidP, 0);
+			
+			Points ls2MidP = new Points(((ls2.startP.x + ls2.endP.x)/2),(ls2.startP.y + ls2.endP.y)/2);
+			putMarkers(ls2MidP, 4);
+			
+			//JOptionPane.showMessageDialog(null, slope1 + ", " + slope2);
+			
+			isPara = (Math.abs(slope1 - slope2) < SLOPE_TOLERANCE) ? true : false;
+
+			return isPara;
+		}
+		
 		public float calcDistancePointLine(Points p, LineSegement ls, float tolr)
 		{
 			float dist = 0.0f;
