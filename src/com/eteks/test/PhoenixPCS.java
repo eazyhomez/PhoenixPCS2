@@ -157,7 +157,7 @@ public class PhoenixPCS extends Plugin
 		public float NINE_SEATER_INDEX = 5.0f;
 		public int[][] NINE_SEATER_DESIGN_RANGE = {{10,27,0}, {10,28,1}, {10,29,3}, {10,30,0}, {10,31,1}, {10,32,3}};
 
-		public float[][][] pcsDimsArr = {{{ROOM_AREA_S_MIN, ROOM_AREA_S_MAX},{FOUR_SEATER_INDEX, FIVE_SEATER_INDEX, SIX_SEATER_INDEX}}, {{ROOM_AREA_M_MIN, ROOM_AREA_M_MAX},{FIVE_SEATER_INDEX, SIX_SEATER_INDEX, SEVEN_SEATER_INDEX}}, {{ROOM_AREA_L_MIN, ROOM_AREA_L_MAX},{SIX_SEATER_INDEX, SEVEN_SEATER_INDEX, EIGHT_SEATER_INDEX, NINE_SEATER_INDEX}}};
+		public float[][][] pcsDimsArr = {{{ROOM_AREA_S_MIN, ROOM_AREA_S_MAX},{SIX_SEATER_INDEX, FIVE_SEATER_INDEX, FOUR_SEATER_INDEX}}, {{ROOM_AREA_M_MIN, ROOM_AREA_M_MAX},{SEVEN_SEATER_INDEX, SIX_SEATER_INDEX, FIVE_SEATER_INDEX}}, {{ROOM_AREA_L_MIN, ROOM_AREA_L_MAX},{NINE_SEATER_INDEX, EIGHT_SEATER_INDEX, SEVEN_SEATER_INDEX, SIX_SEATER_INDEX}}};
 		public int[][][] pcsConfigArr = {FOUR_SEATER_DESIGN_RANGE, FIVE_SEATER_DESIGN_RANGE, SIX_SEATER_DESIGN_RANGE, SEVEN_SEATER_DESIGN_RANGE, EIGHT_SEATER_DESIGN_RANGE, NINE_SEATER_DESIGN_RANGE};
 
 		public String[] configLabelArr = {"4 Seater", "5 Seater", "6 Seater", "7 Seater", "8 Seater", "9 Seater"};
@@ -582,7 +582,7 @@ public class PhoenixPCS extends Plugin
 			for(HomePieceOfFurniture hp : furnGrp.getFurniture())
 			{
 				storeFurnParams(hp);
-				boolean bIntersects = checkIntersectWithAllFurns(hp, false, false);		// do not ignore AccBox as of now
+				boolean bIntersects = checkIntersectWithAllFurns(hp, false);		// do not ignore AccBox as of now
 				
 				//JOptionPane.showMessageDialog(null, hp.getName() + ", bIntersects : " + bIntersects);					
 
@@ -659,9 +659,8 @@ public class PhoenixPCS extends Plugin
 							validDesignCount++;
 						}
 					}
-					else
-						cleanupRealFurnAndWall(furnGrp.getFurniture(), bckWall);
-
+					
+					cleanupRealFurnAndWall(furnGrp.getFurniture(), bckWall);
 					cleanupRealFurnAndWall(realFurnList, bckWall);
 					cleanupMarkers();
 					furnGrp.setAngle(0.0f);
@@ -724,11 +723,14 @@ public class PhoenixPCS extends Plugin
 					// Wallpaper behind Media Cabinet (not now)
 					if(indx == 7)	
 					{
-						//Points hpMid = new Points(hp.getX(), hp.getY());						
-						//populateWallFurn(hpMid, catTextArr, 0);
+						Points hpMid = new Points(hp.getX(), hp.getY());						
+						populateWallFurn(hpMid, catTextArr, 0);
 
-						realFurn.setWidth(hp.getWidth());
-						realFurn.setDepth(hp.getDepth());
+						//realFurn.setWidth(hp.getWidth());
+						//realFurn.setDepth(hp.getDepth());
+						
+						// Do not place media cabinet
+						continue;
 					}
 					else if(indx != 10)
 					{
@@ -739,14 +741,16 @@ public class PhoenixPCS extends Plugin
 					home.addPieceOfFurniture(realFurn);
 					home.deletePieceOfFurniture(hp);
 					
-					storeFurnParams(hp);
-					boolean bIntersects = checkIntersectWithAllFurns(hp, false, false);		// do not ignore AccBox as of now
+					storeFurnParams(realFurn);
+					boolean bIntersects = checkIntersectWithAllFurns(realFurn, false);
 					//JOptionPane.showMessageDialog(null, hp.getName() + ", bIntersects : " + bIntersects);					
 
-					clearFurnParams(hp);
+					clearFurnParams(realFurn);
 					
 					if(!bIntersects)
 						hpList.add(realFurn);
+					else
+						home.deletePieceOfFurniture(realFurn);
 				}
 			}
 
@@ -1023,7 +1027,7 @@ public class PhoenixPCS extends Plugin
 				}
 				case 8: // Seating Config 8
 				{
-					float[][] seatingConf8 = {	{3.0f, (w - x*2.5f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf8 = {	{3.0f, (w - x*2.0f)*CONV_FT_CM, (x*1.5f)*CONV_FT_CM, 0.0f},
 												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
 												{9.0f, ((w - x)*0.5f - 1.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
 												{11.0f, ((w - x)*0.5f - 1.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f}	};
@@ -1033,7 +1037,7 @@ public class PhoenixPCS extends Plugin
 				}
 				case 9: // Seating Config 9
 				{
-					float[][] seatingConf9 = {	{4.0f, (x*2.5f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf9 = {	{4.0f, (x*2.0f)*CONV_FT_CM, (3.0f*x*0.5f)*CONV_FT_CM, 0.0f},
 												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
 												{9.0f, ((w + x)*0.5f + 1.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
 												{11.0f, ((w + x)*0.5f + 1.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f}	};
@@ -1068,20 +1072,20 @@ public class PhoenixPCS extends Plugin
 				}
 				case 12: // Seating Config 12
 				{
-					float[][] seatingConf12 = {	{5.0f, (w - x*2.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf12 = {	{5.0f, (w - x*2.0f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
 												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
-												{9.0f, ((w - x)*0.5f - 1.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, ((w - x)*0.5f - 1.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f}	};
+												{9.0f, (w - x*2.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (w - x*2.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f}	};
 						
 					retSeatingConfig = (seatingConf12);
 					break;
 				}
 				case 13: // Seating Config 13
 				{
-					float[][] seatingConf13 = {	{6.0f, (x*2.5f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
+					float[][] seatingConf13 = {	{6.0f, (x*2.0f)*CONV_FT_CM, (x*2.0f)*CONV_FT_CM, 0.0f},
 												{7.0f, (w*0.5f)*CONV_FT_CM, (y)*CONV_FT_CM, 180.0f},
-												{9.0f, ((w + x)*0.5f + 1.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f},
-												{11.0f, ((w + x)*0.5f + 1.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f}	};
+												{9.0f, (x*2.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f},
+												{11.0f, (x*2.5f)*CONV_FT_CM, (x*2.5f)*CONV_FT_CM, 0.0f}	};
 	
 					retSeatingConfig = (seatingConf13);
 					break;
@@ -3094,23 +3098,20 @@ public class PhoenixPCS extends Plugin
 			}
 		}
 
-		public boolean checkIntersectWithAllFurns(HomePieceOfFurniture hpf, boolean bAddAccessibility, boolean bIgnoreAccBox)
+		public boolean checkIntersectWithAllFurns(HomePieceOfFurniture hpf, boolean bAddAccessibility)
 		{
 			boolean bIntersects = false;
 
 			for(int x = 0 ; x < furnIds.size(); x++)
 			{
-				if(bIgnoreAccBox)
+				String fName = furnIds.get(x).toLowerCase();
+
+				if(fwsExpIds.contains(fName) && !fName.startsWith("dooracc"))
 				{
-					String fName = furnIds.get(x).toLowerCase();
+					//JOptionPane.showMessageDialog(null, "bIgnoreAccBox");
 
-					if(fwsExpIds.contains(fName) && !fName.startsWith("dooracc"))
-					{
-						//JOptionPane.showMessageDialog(null, "bIgnoreAccBox");
-
-						bIntersects = false;
-						continue;
-					}
+					bIntersects = false;
+					continue;
 				}
 
 				if(!hpf.getName().equalsIgnoreCase(furnIds.get(x)))

@@ -6,6 +6,8 @@ Modifications:
 4. Place media cabinet place-holder in PCS
 5. Shift and Snap
 6. Config (Shift)
+7. Bigger seating against the wall
+8. Check designs
 --------------------------------------------------------------------------
 
 Prep:
