@@ -1815,7 +1815,7 @@ public class PhoenixPCS extends Plugin
 					HomePieceOfFurniture hpPlaced = searchMatchFurn(hpfP.getName());						
 					chkFurnOrient(hpPlaced, ws);		// returns orientation (180*)
 
-					HomePieceOfFurniture hpShift = checkAndShift(hpPlaced, inWSList, tolr, pcsWallPrefIndx);
+					HomePieceOfFurniture hpShift = hpPlaced; //checkAndShift(hpPlaced, inWSList, tolr, pcsWallPrefIndx);
 
 					if(hpShift != null)
 					{
