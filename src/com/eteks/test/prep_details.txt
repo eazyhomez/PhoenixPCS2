@@ -7,7 +7,7 @@ Modifications:
 5. Shift and Snap
 6. Config (Shift)
 7. Bigger seating against the wall
-8. Check designs - Final
+8. Check designs - new PCS layouts with beta shift
 
 --------------------------------------------------------------------------
 
