@@ -7,7 +7,7 @@ Modifications:
 5. Shift and Snap
 6. Config (Shift)
 7. Bigger seating against the wall
-8. Check designs
+8. Check designs - WIP
 --------------------------------------------------------------------------
 
 Prep:

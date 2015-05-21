@@ -62,6 +62,8 @@ public class PhoenixPathway
 	
 	public UserPreferences userPref;
 	
+	public int MAX_LOOP_COUNT = 10;
+	
 	// ======================= CLASSES ======================= //
 	
 	public class Points
@@ -141,6 +143,13 @@ public class PhoenixPathway
 					
 			List<LineSegement> newSegList = runFirstLoop(centerP, radius, sP1, sP2, padding, newArcLength);
 			masterNewSegList.add(newSegList);
+			
+			if((masterNewSegList == null) || (masterNewSegList.size() < 1))
+			{
+				bNoSegment = true;
+				bStop = true;
+			}
+			
 			supMasterNewSegList.add(masterNewSegList);
 			
 			int loopCount = 0;				
@@ -152,12 +161,18 @@ public class PhoenixPathway
 						
 				loopCount++;
 				
-				if(loopCount > 10)
+				if(loopCount > MAX_LOOP_COUNT)
 				{
+					/*
 					if(masterNewSegList != null)
 						JOptionPane.showMessageDialog(null, loopCount + " : " + masterNewSegList.size());
 					else
 						JOptionPane.showMessageDialog(null, loopCount + " --- ");
+					*/
+					
+					bNoSegment = true;
+					bStop = true;
+					break;
 				}
 				
 				List<List<LineSegement>> nxtMasterNewSegList = new ArrayList<List<LineSegement>>();
@@ -292,11 +307,6 @@ public class PhoenixPathway
 				}
 			}
 		}
-		else
-		{
-			bNoSegment = true;
-			bStop = true;
-		}
 		
 		return newArcSegList;
 	}
@@ -310,35 +320,35 @@ public class PhoenixPathway
 		
 		Points centerP = new Points(((sP1.x + sP2.x)/2), ((sP1.y + sP2.y)/2));
 		
-		if(bShowMarker)
-		{
-			putMarkers(centerP, 2);	
-		}
+		boolean isInValid = checkPointValid(centerP);
 		
-		List<Points> arcP = generateNextArcPoints(sP1, sP2, rad, h, prevCenter);
-		
-		if(arcP.size() > 1)
+		if(!isInValid)
 		{
-			Points arcP1 = arcP.get(0);
-			Points arcP2 = arcP.get(1);
-			
-			//putMarkers(arcP1, 5);
-			//putMarkers(arcP2, 5);
-			
-			List<LineSegement> arcSegList = generateFreeArcSegs(centerP, arcP1, arcP2, rad);
-			
-			if(!bStop)
+			if(bShowMarker)
 			{
-				if(arcSegList.size() > 0)
+				putMarkers(centerP, 2);	
+			}
+			
+			List<Points> arcP = generateNextArcPoints(sP1, sP2, rad, h, prevCenter);
+			
+			if(arcP.size() > 1)
+			{
+				Points arcP1 = arcP.get(0);
+				Points arcP2 = arcP.get(1);
+				
+				//putMarkers(arcP1, 5);
+				//putMarkers(arcP2, 5);
+				
+				List<LineSegement> arcSegList = generateFreeArcSegs(centerP, arcP1, arcP2, rad);
+				
+				if(!bStop)
 				{
-					newArcSegList = generateNextArcSegs(arcSegList, newArcLen, centerP, rad);	
+					if(arcSegList.size() > 0)
+					{
+						newArcSegList = generateNextArcSegs(arcSegList, newArcLen, centerP, rad);	
+					}
 				}
 			}
-		}
-		else
-		{
-			bNoSegment = true;
-			bStop = true;
 		}
 		
 		return newArcSegList;
@@ -388,6 +398,21 @@ public class PhoenixPathway
 		return bRet;
 	}
 		
+	public boolean checkDiningForPoints(Points testP)
+	{
+		boolean bRet = false;
+		
+		if(accRect != null)
+		{
+			bRet = accRect.containsPoint(testP.x, testP.y, FURN_TOLERANCE);
+			
+			if(bShowMarker || bShowPathway)
+				putMarkers(testP, 0);
+		}
+		
+		return bRet;
+	}
+	
 	public List<Points> sortPList(List<Points> interPList, Points ref)
 	{
 		List<Points> retPList = new ArrayList<Points>();
@@ -525,7 +550,13 @@ public class PhoenixPathway
 			}
 		}
 					
-		boolean bInDining = checkDining(interPList);
+		boolean bInDining = checkDiningForPoints(pArc1);
+		
+		if(!bInDining)
+			bInDining = checkDiningForPoints(pArc2);
+		
+		if(!bInDining)
+			bInDining = checkDining(interPList);
 		
 		if(!bInDining)
 		{
@@ -597,9 +628,14 @@ public class PhoenixPathway
 	{		
 		List<Points> interPList = new ArrayList<Points>();	
 		
-		for(float[][] fRects : furnRects)
+		for(int f = 0 ; f < furnRects.size(); f++)
 		{
-			List<Points> intList = getIntersectionArcRectangle(center, radius, fRects, pArc1, pArc2, tolerance);
+			String fName = furnIds.get(f).toLowerCase();
+			
+			if(fName.contains("accbox"))
+				continue;
+			
+			List<Points> intList = getIntersectionArcRectangle(center, radius, furnRects.get(f), pArc1, pArc2, tolerance);
 			interPList.addAll(intList);
 		}
 		
@@ -657,6 +693,29 @@ public class PhoenixPathway
 		}
 			
 		return bIsInside;
+	}
+	
+	public boolean checkPointValid(Points test)
+	{
+		boolean bInValid = false;
+		
+		for(HomePieceOfFurniture hpf : home.getFurniture())
+		{
+			String fName = hpf.getName();
+			
+			if(!markBoxName.contains(fName))
+			{
+				boolean bCheck1 = hpf.containsPoint(test.x, test.y, FURN_TOLERANCE);
+				
+				if(bCheck1)
+				{
+					bInValid = true;
+					break;
+				}
+			}
+		}
+		
+		return bInValid;
 	}
 	
 	public List<Points> getIntersectionArcRectangle(Points center, float rad, float[][] furnRect, Points arcP1, Points arcP2, float tolerance)

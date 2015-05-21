@@ -157,7 +157,7 @@ public class PhoenixPCS extends Plugin
 		public float NINE_SEATER_INDEX = 5.0f;
 		public int[][] NINE_SEATER_DESIGN_RANGE = {{10,27,0}, {10,28,1}, {10,29,3}, {10,30,0}, {10,31,1}, {10,32,3}};
 
-		public float[][][] pcsDimsArr = {{{ROOM_AREA_S_MIN, ROOM_AREA_S_MAX},{SIX_SEATER_INDEX, FIVE_SEATER_INDEX, FOUR_SEATER_INDEX}}, {{ROOM_AREA_M_MIN, ROOM_AREA_M_MAX},{SEVEN_SEATER_INDEX, SIX_SEATER_INDEX, FIVE_SEATER_INDEX}}, {{ROOM_AREA_L_MIN, ROOM_AREA_L_MAX},{NINE_SEATER_INDEX, EIGHT_SEATER_INDEX, SEVEN_SEATER_INDEX, SIX_SEATER_INDEX}}};
+		public float[][][] pcsDimsArr = {{{ROOM_AREA_S_MIN, ROOM_AREA_S_MAX},{SIX_SEATER_INDEX, FIVE_SEATER_INDEX, FOUR_SEATER_INDEX}}, {{ROOM_AREA_M_MIN, ROOM_AREA_M_MAX},{SEVEN_SEATER_INDEX, SIX_SEATER_INDEX, FIVE_SEATER_INDEX, FOUR_SEATER_INDEX}}, {{ROOM_AREA_L_MIN, ROOM_AREA_L_MAX},{NINE_SEATER_INDEX, EIGHT_SEATER_INDEX, SEVEN_SEATER_INDEX, SIX_SEATER_INDEX, FIVE_SEATER_INDEX,}}};
 		public int[][][] pcsConfigArr = {FOUR_SEATER_DESIGN_RANGE, FIVE_SEATER_DESIGN_RANGE, SIX_SEATER_DESIGN_RANGE, SEVEN_SEATER_DESIGN_RANGE, EIGHT_SEATER_DESIGN_RANGE, NINE_SEATER_DESIGN_RANGE};
 
 		public String[] configLabelArr = {"4 Seater", "5 Seater", "6 Seater", "7 Seater", "8 Seater", "9 Seater"};
@@ -624,7 +624,7 @@ public class PhoenixPCS extends Plugin
 					PhoenixPathway pathway = new PhoenixPathway();
 					boolean bSuccess = pathway.execute(home, getUserPreferences(), accBox);
 
-					//JOptionPane.showMessageDialog(null, "bSuccess : ");
+					//JOptionPane.showMessageDialog(null, "bSuccess : " + bSuccess);
 
 					home.deletePieceOfFurniture(accBox);
 
@@ -875,7 +875,7 @@ public class PhoenixPCS extends Plugin
 
 			//dbgStr += activePCSConfList.toString() + "\n";
 
-			//JOptionPane.showMessageDialog(null, dbgStr);
+			JOptionPane.showMessageDialog(null, dbgStr);
 
 			return activePCSConfList;
 		}
@@ -1580,6 +1580,7 @@ public class PhoenixPCS extends Plugin
 							break;
 						}
 					}
+					
 					//JOptionPane.showMessageDialog(null, minDist + ", bLiesOnWall : " + bLiesOnWall + ", " + f);
 
 					boolean bValid = false;
@@ -1861,11 +1862,11 @@ public class PhoenixPCS extends Plugin
 				{
 					finalWSList.add(ws);
 					
-					if(bShowMarker)
+					//if(bShowMarker)
 					{
 						Points midFWS = new Points(((ws.startP.x + ws.endP.x)/2.0f),((ws.startP.y + ws.endP.y)/2.0f));
 						putMarkers(midFWS, 1);
-						//JOptionPane.showMessageDialog(null, "!!!");
+						JOptionPane.showMessageDialog(null, "!!!");
 					}
 					
 				}
@@ -2140,7 +2141,7 @@ public class PhoenixPCS extends Plugin
 				{
 					// Marker
 					Points midWS = new Points(((validWS.startP.x + validWS.endP.x)/2.0f),((validWS.startP.y + validWS.endP.y)/2.0f));
-					//putMarkers(midWS, 6);
+					putMarkers(midWS, 6);
 				}
 			}
 
@@ -2297,7 +2298,7 @@ public class PhoenixPCS extends Plugin
 
 						freeWallSegList.add(fws);
 
-						if(bShowMarkerInter)
+						//if(bShowMarkerInter)
 						{
 							// Debug
 							Points midFWS = new Points(((fws.startP.x + fws.endP.x)/2.0f),((fws.startP.y + fws.endP.y)/2.0f));
