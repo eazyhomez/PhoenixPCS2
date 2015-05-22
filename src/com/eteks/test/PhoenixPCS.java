@@ -674,7 +674,7 @@ public class PhoenixPCS extends Plugin
 					else
 						bSuccess = (!bIntersects1 || !bIntersects2);
 					
-					JOptionPane.showMessageDialog(null, "bSuccess : " + bSuccess);
+					//JOptionPane.showMessageDialog(null, "bSuccess : " + bSuccess);
 
 					clearFurnParams(accBox1);
 					clearFurnParams(accBox2);
@@ -688,7 +688,7 @@ public class PhoenixPCS extends Plugin
 					{		
 						if(bPopulateFurn)
 						{
-							realFurnList = populateFurn(furnGrp, refIndxList, (seatingIndx + 1));							
+							realFurnList = populateFurn(furnGrp, refIndxList, seatingIndx);							
 							//JOptionPane.showMessageDialog(null, "PCS Design generated !!!");
 
 							if(realFurnList.size() > 0)
@@ -696,7 +696,7 @@ public class PhoenixPCS extends Plugin
 								cleanupMarkers();
 								
 								if(bSaveDesign)
-									saveDesign(home, name);
+									saveDesign(home, (name + "_" + ( + validDesignCount + 1)));
 								
 								validDesignCount++;
 							}
@@ -707,7 +707,7 @@ public class PhoenixPCS extends Plugin
 							cleanupMarkers();
 							
 							if(bSaveDesign)
-								saveDesign(home, name);
+								saveDesign(home, (name + "_" + ( + validDesignCount + 1)));
 							
 							validDesignCount++;
 						}
@@ -959,6 +959,7 @@ public class PhoenixPCS extends Plugin
 								realFurn.setElevation(elev + 0.2f);
 							}							
 						}
+						
 						home.deletePieceOfFurniture(hp);
 						
 						boolean bIntersects = false;
@@ -967,18 +968,31 @@ public class PhoenixPCS extends Plugin
 						home.addPieceOfFurniture(realFurn);
 						
 						if(indx == 7)
-							bIntersects = checkIntersectWithAllFurns(realFurn, false, false);
+						{
+							bIntersects = checkIntersectWithAllFurns(realFurn, false, false);							
+							clearFurnParams(realFurn);
+							
+							if(!bIntersects)
+								hpList.add(realFurn);
+							else
+								home.deletePieceOfFurniture(realFurn);
+						}
 						else
-							bIntersects = checkIntersectWithAllFurns(realFurn, false, true);
-						
+						{
+							bIntersects = checkIntersectWithAllFurns(realFurn, false, true);							
+							clearFurnParams(realFurn);
+							
+							if(!bIntersects)
+								hpList.add(realFurn);
+							else
+							{
+								hpList.add(realFurn);
+								cleanupRealFurnAndWall(hpList, bckWall);
+								hpList = new ArrayList<HomePieceOfFurniture>();
+								return hpList;
+							}
+						}
 						//JOptionPane.showMessageDialog(null, hp.getName() + ", bIntersects : " + bIntersects);					
-	
-						clearFurnParams(realFurn);
-						
-						if(!bIntersects)
-							hpList.add(realFurn);
-						else
-							home.deletePieceOfFurniture(realFurn);
 					}
 				}
 			}
@@ -1048,13 +1062,15 @@ public class PhoenixPCS extends Plugin
 
 		public void saveDesign(Home h, String name)
 		{
+			String desName = name.replaceAll("Rect", "Design");
+			
 			try
 			{
 				Home hClone = h.clone();
-				hClone.setName(name + "_Home");
+				hClone.setName(desName + "_Home");
 
 				HomeRecorder recorder = new HomeFileRecorder();
-				recorder.writeHome(h, (homeFilepath + File.separatorChar + name  + "_Home" + ".sh3d")); 
+				recorder.writeHome(h, (homeFilepath + File.separatorChar + desName  + "_Home" + ".sh3d")); 
 			}
 			catch (Exception e)
 			{
@@ -1648,7 +1664,7 @@ public class PhoenixPCS extends Plugin
 				bInRoom = checkInsideRoom(livingRoom, hpRef.getPoints(), PLACEMENT_TOLERANCE);
 			}
 
-			JOptionPane.showMessageDialog(null, "Snap : Final placement -> " + bInRoom + " (" + bInvalidConfig + ")");
+			//JOptionPane.showMessageDialog(null, "Snap : Final placement -> " + bInRoom + " (" + bInvalidConfig + ")");
 			
 			return bInRoom;
 		}
