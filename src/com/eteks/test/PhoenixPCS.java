@@ -138,7 +138,7 @@ public class PhoenixPCS extends Plugin
 		public boolean bPopulateFurn = true;
 		public boolean bSaveDesign = true;
 		
-		public float SHIFT_TOLERANCE = 6.0f*CONV_FT_CM; // 6ft
+		public float SHIFT_TOLERANCE = 7.5f*CONV_FT_CM; // 6ft
 		
 		public float PCS_RECT_POS_LEN = 12.0f*CONV_FT_CM;
 		
@@ -164,7 +164,7 @@ public class PhoenixPCS extends Plugin
 
 		//public float[][][] pcsDimsArr = {{{ROOM_AREA_S_MIN, ROOM_AREA_S_MAX},{SIX_SEATER_INDEX, FIVE_SEATER_INDEX, FOUR_SEATER_INDEX}}, {{ROOM_AREA_M_MIN, ROOM_AREA_M_MAX},{SEVEN_SEATER_INDEX, SIX_SEATER_INDEX, FIVE_SEATER_INDEX}}, {{ROOM_AREA_L_MIN, ROOM_AREA_L_MAX},{NINE_SEATER_INDEX, EIGHT_SEATER_INDEX, SEVEN_SEATER_INDEX, SIX_SEATER_INDEX, FIVE_SEATER_INDEX}}};
 		
-		public float[] pcsDimsArr = {FIVE_SEATER_INDEX, SIX_SEATER_INDEX, SEVEN_SEATER_INDEX, FOUR_SEATER_INDEX, EIGHT_SEATER_INDEX};
+		public float[] pcsDimsArr = {/*FIVE_SEATER_INDEX, SIX_SEATER_INDEX, SEVEN_SEATER_INDEX, FOUR_SEATER_INDEX,*/ EIGHT_SEATER_INDEX};
 		public int[][][] pcsConfigArr = {FOUR_SEATER_DESIGN_RANGE, FIVE_SEATER_DESIGN_RANGE, SIX_SEATER_DESIGN_RANGE, SEVEN_SEATER_DESIGN_RANGE, EIGHT_SEATER_DESIGN_RANGE, NINE_SEATER_DESIGN_RANGE};
 
 		public String[] configLabelArr = {"4S", "5S", "6S", "7S", "8S", "9S"};
@@ -1673,8 +1673,7 @@ public class PhoenixPCS extends Plugin
 		{
 			cleanupMarkers();			
 			//JOptionPane.showMessageDialog(null, "Initial position");
-			
-			boolean bShifted = false;
+
 			boolean bShiftedD = false;
 			
 			Points furnCenter = new Points(hpRef.getX(), hpRef.getY());
@@ -1684,10 +1683,10 @@ public class PhoenixPCS extends Plugin
 			for(int f = 0; f < fRect.length; f++)
 			{
 				if(f == 2)
-					continue;		// Forward shift not needed
+					continue;				// Forward shift not needed
 				
 				if((f == 1) || (f == 3))
-					continue;		// Disabling sideway shift for now (beta)
+					continue;				// Disabling sideway shift for now (beta)
 
 				Points startP = new Points(fRect[f][0], fRect[f][1]);
 				Points endP = null;
@@ -1717,9 +1716,9 @@ public class PhoenixPCS extends Plugin
 						boolean bOnSameSide = checkPointOnSameSide(wsMidP, furnCenter, fs.startP, fs.endP);
 						
 						if(!bOnSameSide)
-							ws.len = 1;
+							ws.len = 1.0f;
 						else
-							ws.len = -1;
+							ws.len = -1.0f;
 						
 						Float dist = calcDistanceParallel(fs, ls, tolr);
 						distMap.put(dist, ws);
@@ -1741,133 +1740,117 @@ public class PhoenixPCS extends Plugin
 					minKeys.add(k);
 				}
 				
-				for(Float key : minKeys)
+				for(Float minDist : minKeys)
 				{
-					WallSegement minWS = distMap.get(key);
+					WallSegement minWS = distMap.get(minDist);
 					LineSegement minLS = new LineSegement(minWS);
 					
-					Float minDist = (minWS.len * key);
-					
-					Points midMinLS = new Points(((minLS.startP.x + minLS.endP.x)/2.0f),(minLS.startP.y + minLS.endP.y)/2.0f);	
+					//Points midMinLS = new Points(((minLS.startP.x + minLS.endP.x)/2.0f),(minLS.startP.y + minLS.endP.y)/2.0f);	
 					//putMarkers(midMinLS, 5);
 					
 					if(minDist > SHIFT_TOLERANCE)
 						continue;
 					
-					List<Points> snapPList = calcSnapCoordinate(minLS, fs, minDist, livingRoom, tolr);
+					List<Points> shiftPList = calcSnapCoordinate(minLS, fs, minDist, livingRoom, tolr);
 
-					for(Points snapP : snapPList)
+					int markerCount = 1;
+					
+					for(Points shiftP : shiftPList)
 					{
-						//putMarkers(snapP, 3);
-						
+						//putMarkers(snapP, 3);						
 						Points centerFS = new Points(((fs.startP.x + fs.endP.x)/2.0f),(fs.startP.y + fs.endP.y)/2.0f);								
 
-						Points snapCoords = new Points((snapP.x - centerFS.x), (snapP.y - centerFS.y));	
-
-						hpRef.setX(furnCenter.x + snapCoords.x);
-						hpRef.setY(furnCenter.y + snapCoords.y);
-						//putMarkers(new Points(hpRef.getX(), hpRef.getY()), 6);
-
-						boolean bLiesOnWall = checkFace(hpRef.getPoints(), f, minLS, tolr);
-
-						if(bLiesOnWall)
-						{
-							if((wallPrefIndx != 0) && (wallPrefIndx != f))
-							{
-								home.deletePieceOfFurniture(hpRef);
-								hpRef = null;
-								
-								bShifted = true;
-								break;
-							}
-						}
+						Points shiftCoords = new Points();
 						
-						//JOptionPane.showMessageDialog(null, minDist + ", bLiesOnWall : " + bLiesOnWall + ", " + f);
+						boolean bShiftInwards = (minWS.len == -1.0f) ? true : false;
+						
+						if(bShiftInwards)
+							shiftCoords = new Points((centerFS.x - shiftP.x), (centerFS.y - shiftP.y));
+						else
+							shiftCoords = new Points((shiftP.x - centerFS.x), (shiftP.y - centerFS.y));
 
-						boolean bValid = false;
-						bValid = checkInsideRoom(livingRoom, hpRef.getPoints(), PLACEMENT_TOLERANCE);
+						if(bShiftInwards)
+						{
+							hpRef.setX(furnCenter.x - shiftCoords.x);
+							hpRef.setY(furnCenter.y - shiftCoords.y);
+						}
+						else
+						{
+							hpRef.setX(furnCenter.x + shiftCoords.x);
+							hpRef.setY(furnCenter.y + shiftCoords.y);
+						}					
 
+						if(markerCount == 1)
+							putMarkers(new Points(hpRef.getX(), hpRef.getY()), 3);
+						else
+							putMarkers(new Points(hpRef.getX(), hpRef.getY()), 1);
+						
+						putMarkers(furnCenter, 2);
+						
+						boolean bValid = true;
+						
+						if(!bShiftInwards)
+							bValid = checkInsideRoom(livingRoom, hpRef.getPoints(), PLACEMENT_TOLERANCE);
+
+						//JOptionPane.showMessageDialog(null, "bV : " + bValid);
+							
 						if(bValid)
 						{
-							if(f == 0)
+							float currX = hpRef.getX();
+							float currY = hpRef.getY();
+
+							float newX = 0.0f;
+							float newY = 0.0f;
+
+							newX = (furnCenter.x + currX) / 2.0f;
+							newY = (furnCenter.y + currY) / 2.0f;
+							
+							hpRef.setX(newX);
+							hpRef.setY(newY);
+
+							float elongLen = calcDistance(new Points(currX, currY), furnCenter);
+							
+							float currDep = hpRef.getDepth();
+							
+							if(bShiftInwards)
 							{
-								float currX = hpRef.getX();
-								float currY = hpRef.getY();
-
-								float newX = (currX + furnCenter.x) / 2.0f;
-								float newY = (currY + furnCenter.y) / 2.0f;
-
-								hpRef.setX(newX);
-								hpRef.setY(newY);
-
-								float elongLen = calcDistance(new Points(currX, currY), furnCenter);
-								
-								float currDep = hpRef.getDepth();
-								hpRef.setDepth(currDep + elongLen);
-
-								//JOptionPane.showMessageDialog(null, "Shift - D !!!");
-								
-								boolean bInRoom = checkInsideRoom(livingRoom, hpRef.getPoints(), PLACEMENT_TOLERANCE);
-								
-								if(bInRoom)
-								{
-									bShiftedD = true;
-								}
-								else
-								{
-									hpRef.setX(currX);
-									hpRef.setY(currY);
-									hpRef.setDepth(currDep);
-									//JOptionPane.showMessageDialog(null, "UNShift - D xxx");
-								}
-
-								furnCenter = new Points(hpRef.getX(), hpRef.getY());
-								
-								putMarkers(furnCenter, 5);
-								break;
+								hpRef.setDepth(currDep - elongLen);
+								//JOptionPane.showMessageDialog(null, "Shift -> D-- !!!");
 							}
 							else
 							{
-								if(!bShiftedD)
+								hpRef.setDepth(currDep + elongLen);
+								//JOptionPane.showMessageDialog(null, "Shift -> D++ !!!");
+							}
+							
+							float[][] elongFRect = hpRef.getPoints();
+							Points elongStartP = new Points(elongFRect[0][0], elongFRect[0][1]);
+							Points elongEndP = new Points(elongFRect[0][0], elongFRect[0][1]);
+
+							LineSegement elongFS = new LineSegement(elongStartP, elongEndP);
+							
+							float paraDist = calcDistanceParallel(minLS, elongFS, tolr);
+							//JOptionPane.showMessageDialog(null, "paraDist : " + paraDist);
+							
+							boolean bValidShift = (paraDist <= PLACEMENT_TOLERANCE) ? true : false;
+							
+							if(bValidShift)
+							{
+								if(checkInsideRoom(livingRoom, hpRef.getPoints(), PLACEMENT_TOLERANCE))
 								{
-									float currX = hpRef.getX();
-									float currY = hpRef.getY();
-
-									float newX = (currX + furnCenter.x) / 2.0f;
-									float newY = (currY + furnCenter.y) / 2.0f;
-
-									hpRef.setX(newX);
-									hpRef.setY(newY);
-
-									float elongLen = calcDistance(new Points(currX, currY), furnCenter);
-									
-									float currWid = hpRef.getWidth();
-									hpRef.setWidth(currWid + elongLen);
-
-									//JOptionPane.showMessageDialog(null, "Shift - W !!!");
-									
-									boolean bInRoom = checkInsideRoom(livingRoom, hpRef.getPoints(), PLACEMENT_TOLERANCE);
-									
-									if(!bInRoom)
-									{
-										hpRef.setX(currX);
-										hpRef.setY(currY);
-										
-										hpRef.setWidth(currWid);
-										//JOptionPane.showMessageDialog(null, "UNShift - W xxx");
-									}
-									
+									bShiftedD = true;
 									furnCenter = new Points(hpRef.getX(), hpRef.getY());
-
-									putMarkers(furnCenter, 7);
+									
+									putMarkers(furnCenter, 5);
 									break;
 								}
-								else
-								{	
-									furnCenter = new Points(hpRef.getX(), hpRef.getY());
-									bShifted = true;								
-									break;
-								}
+							}
+							else
+							{
+								hpRef.setX(furnCenter.x);
+								hpRef.setY(furnCenter.y);
+								hpRef.setDepth(currDep);
+								//JOptionPane.showMessageDialog(null, "UNShift - D xxx");
 							}
 						}
 						else
@@ -1875,15 +1858,21 @@ public class PhoenixPCS extends Plugin
 							hpRef.setX(furnCenter.x);
 							hpRef.setY(furnCenter.y);
 						}
-					}			
+						
+						markerCount++;
+					}
+					
+					if(bShiftedD)
+						break;
 				}								
 			
-				if(bShifted)
+				if(bShiftedD)
 					break;
 			}
 			
 			//JOptionPane.showMessageDialog(null, "Finally Here --");
 			return hpRef;
+		
 		}
 
 		public boolean checkFace(float[][] fRect, int indx, LineSegement ls, float tolr)
@@ -2047,7 +2036,7 @@ public class PhoenixPCS extends Plugin
 		{
 			boolean bSuccess = false;
 
-			int counter = 1; 
+			int counter1 = 1; 
 
 			for(WallSegement ws : finalWSList)
 			{				
@@ -2057,26 +2046,29 @@ public class PhoenixPCS extends Plugin
 				putMarkers(midWS, 6);
 
 				HomePieceOfFurniture hpfP = pcsRect.clone();
-				hpfP.setName(pcsRect.getName() + "_" + counter);
+				hpfP.setName(pcsRect.getName() + "_" + counter1);
 
 				List<Points> pcsPointList = calculateRectPos(ws, hpfP);
 
+				int counter2 = 1; 
+				
 				for (Points pcsPoint : pcsPointList)
 				{
-					placeFurnParallelToWall(ls, hpfP, pcsPoint);
-					bIgnoreAccBox = true;
-
-					HomePieceOfFurniture hpPlaced = searchMatchFurn(hpfP.getName());						
+					HomePieceOfFurniture hpPlaced = hpfP.clone();
+					hpPlaced.setName(hpfP.getName() + "_" + counter2);
+					
+					placeFurnParallelToWall(ls, hpPlaced, pcsPoint);
+					bIgnoreAccBox = true;						
 					chkFurnOrient(hpPlaced, ws);		// returns orientation (180*)
 
-					HomePieceOfFurniture hpShift = checkAndShift(hpPlaced, inWSList, tolr, pcsWallPrefIndx);
+					boolean bValid = checkAndSnap(hpPlaced, inWSList, tolr, pcsWallPrefIndx);
+					//JOptionPane.showMessageDialog(null, "bValid : " + bValid);
 
-					if(hpShift != null)
+					if(bValid)
 					{
-						boolean bValid = checkAndSnap(hpShift, inWSList, tolr, pcsWallPrefIndx);
-						//JOptionPane.showMessageDialog(null, "bValid : " + bValid);
+						HomePieceOfFurniture hpShift = checkAndShift(hpPlaced, inWSList, tolr, pcsWallPrefIndx);
 	
-						if(bValid)
+						if(hpShift != null)
 						{
 							bSuccess = checkInsideHome(finalWSList, hpShift, PLACEMENT_TOLERANCE);
 							//JOptionPane.showMessageDialog(null, "bSuccess : " + bSuccess);
@@ -2089,9 +2081,12 @@ public class PhoenixPCS extends Plugin
 						}
 					}
 					
-					home.deletePieceOfFurniture(hpfP);					
-					counter++;
+					home.deletePieceOfFurniture(hpPlaced);				
+					counter2++;
 				}
+				
+				home.deletePieceOfFurniture(hpfP);
+				counter1++;
 			}
 		}
 

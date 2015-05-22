@@ -8,14 +8,15 @@ Modifications:
 6. Config (Shift)
 7. Bigger seating against the wall
 8. Check designs - new PCS layouts with beta shift
-9. Check designs - new PCS layouts WITHOUT beta shift
+9. Check designs - new PCS layouts WITHOUT beta shift - WIP
 
 
 A. Correct the configs
 B. Irrespective of room size follow seating order 5,6,7 seater; if less than 3 designs : try 4,8 seater
 C. Check Snap - without valid config check
 D. Check Snap - with valid config check
-E. Calculate PCSRect initial position with 12' shifts in both directions 
+E. Calculate PCSRect initial position with 12' shifts in both directions
+F. Check Shift - only alpha (forward + backward)
 
 --------------------------------------------------------------------------
 
