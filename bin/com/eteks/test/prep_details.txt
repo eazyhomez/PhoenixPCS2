@@ -16,8 +16,8 @@ B. Irrespective of room size follow seating order 5,6,7 seater; if less than 3 d
 C. Check Snap - without valid config check
 D. Check Snap - with valid config check
 E. Calculate PCSRect initial position with 12' shifts in both directions
-F. Check Shift - only alpha (forward + backward)
-
+F. Check Shift - only alpha (outward + inward)
+G. Accessibility Line
 --------------------------------------------------------------------------
 
 Prep:
