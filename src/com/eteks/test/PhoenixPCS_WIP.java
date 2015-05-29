@@ -56,6 +56,9 @@ public class PhoenixPCS extends Plugin
 		public List<String> fwsExpIds = new ArrayList<String>();
 		public List<HomePieceOfFurniture> subAccBoxList = new ArrayList<HomePieceOfFurniture>();
 		
+		public List<String> freeSubAccBoxList = new ArrayList<String>();
+		public List<String> currSubAccBoxParent = new ArrayList<String>();
+
 		public int MARKBOX_COUNT = 8;
 		public List<String> markBoxName = new ArrayList<String>();
 		public HomePieceOfFurniture[] markBoxes = new HomePieceOfFurniture[MARKBOX_COUNT];		
@@ -145,13 +148,7 @@ public class PhoenixPCS extends Plugin
 		
 		public float SHIFT_TOLERANCE = 7.5f*CONV_FT_CM; // 6ft
 		
-		public float PCS_RECT_POS_LEN = 12.0f*CONV_FT_CM;  // 12ft
-		
-		public float PCS_RECT_MIN_DEPTH = 10.0f*CONV_FT_CM;
-		
-		public int SHIFT_WALL_NOS = 1;
-		
-		public float SIMILAR_DESIGN_TOLERANCE = 3.0f*CONV_FT_CM;
+		public float PCS_RECT_POS_LEN = 12.0f*CONV_FT_CM;
 		
 		// ======================= PCS CONSTANTS ======================= //
 
@@ -663,6 +660,165 @@ public class PhoenixPCS extends Plugin
 			furnGrp.setAngle(0.0f);
 		}
 		
+		public boolean checkIntersectWithAllFurnsAndSubBoxes(HomePieceOfFurniture hpf, boolean bIgnoreWindow, boolean bIgnoreAccBox)
+		{
+			boolean bIntersects = false;
+			boolean bCheckSubBoxes = false;
+			
+
+			for(int x = 0 ; x < furnIds.size(); x++)
+			{	
+				String fName = furnIds.get(x).toLowerCase();
+
+				if(bIgnoreAccBox)
+				{
+					if(fwsExpIds.contains(fName) && !fName.startsWith("dooracc"))
+					{
+						//JOptionPane.showMessageDialog(null, "bIgnoreAccBox");
+
+						bIntersects = false;
+						continue;
+					}
+				}
+				
+				if(bIgnoreWindow && fName.startsWith("window"))
+					continue;
+				
+				if(!hpf.getName().equalsIgnoreCase(furnIds.get(x)))
+				{
+					bCheckSubBoxes = false;
+					
+					String refFurnName = furnIds.get(x);
+					
+					if(refFurnName.startsWith("BalcAccBox") || refFurnName.startsWith("WallOAccBox"))
+						bCheckSubBoxes = true;
+					
+					float[][] refFurnRect = furnRects.get(x);
+
+					for(int f = 0; f < refFurnRect.length; f++)
+					{
+						Points startLine = new Points(refFurnRect[f][0], refFurnRect[f][1]);
+
+						Points endLine = null;
+
+						if(f == (refFurnRect.length - 1))
+							endLine = new Points(refFurnRect[0][0], refFurnRect[0][1]);
+						else
+							endLine = new Points(refFurnRect[f+1][0], refFurnRect[f+1][1]);				
+
+						LineSegement ls = new LineSegement(startLine, endLine);
+
+						// For Accessibility check
+						List<Intersect> interList = new ArrayList<Intersect>();
+
+						interList = checkIntersect(ls, hpf.getName());
+
+						for(Intersect inter : interList)
+						{
+							if(inter != null)
+							{
+								bIntersects = checkPointInBetween(inter.p, ls.startP, ls.endP, FURN_TOLERANCE);
+
+								if(bIntersects)
+									break;
+							}
+							//putMarkers(inter.p, 3);
+						}
+					}
+					
+					// Debug
+					//if(bIntersects)
+						//JOptionPane.showMessageDialog(null, "refFurnName : " + refFurnName + ", f : " + hpf.getName() + ", -> bCheckSubBoxes : " + bCheckSubBoxes);
+						
+					// Check if it lies completely inside
+					if(!bIntersects)
+					{
+						HomePieceOfFurniture refFurn = furnList.get(x);
+						bIntersects = refFurn.containsPoint(hpf.getX(), hpf.getY(), FURN_TOLERANCE);
+					}
+					
+					if(bIntersects && bCheckSubBoxes)
+					{
+						currSubAccBoxParent.add(refFurnName);
+						
+						//JOptionPane.showMessageDialog(null, "refFurnName : " + refFurnName + ", f : " + hpf.getName());
+						checkSubAccBoxes(hpf, refFurnName);
+					}
+					
+					if(bIntersects)
+						break;
+				}
+
+				if(bIntersects)
+					break;
+			}
+
+			return bIntersects;
+		}
+
+		public void checkSubAccBoxes(HomePieceOfFurniture hpf, String parentAccBox)
+		{			
+			boolean bIntersects = false;
+			
+			for(HomePieceOfFurniture subAccBox : subAccBoxList)
+			{
+				String boxName = subAccBox.getName();
+						
+				if(boxName.startsWith(parentAccBox))
+				{
+					bIntersects = false;	
+					home.addPieceOfFurniture(subAccBox);					
+
+					float[][] refSubAccBoxRect = subAccBox.getPoints();
+
+					for(int f = 0; f < refSubAccBoxRect.length; f++)
+					{
+						Points startLine = new Points(refSubAccBoxRect[f][0], refSubAccBoxRect[f][1]);
+
+						Points endLine = null;
+
+						if(f == (refSubAccBoxRect.length - 1))
+							endLine = new Points(refSubAccBoxRect[0][0], refSubAccBoxRect[0][1]);
+						else
+							endLine = new Points(refSubAccBoxRect[f+1][0], refSubAccBoxRect[f+1][1]);				
+
+						LineSegement ls = new LineSegement(startLine, endLine);
+						
+						List<Intersect> interList = checkIntersect(ls, hpf.getName());
+
+						for(Intersect inter : interList)
+						{
+							if(inter != null)
+							{
+								bIntersects = checkPointInBetween(inter.p, ls.startP, ls.endP, FURN_TOLERANCE);
+
+								if(bIntersects)
+									break;
+							}
+							//putMarkers(inter.p, 3);
+						}
+					}
+					
+					// Check if it lies completely inside
+					if(!bIntersects)
+						bIntersects = subAccBox.containsPoint(hpf.getX(), hpf.getY(), FURN_TOLERANCE);
+
+					//JOptionPane.showMessageDialog(null, "bIntersects : " + bIntersects + ", f : " + hpf.getName());
+					
+					if(bIntersects)
+					{
+						//JOptionPane.showMessageDialog(null, "boxName : " + boxName);
+								
+						int indx = freeSubAccBoxList.indexOf(boxName);
+						
+						if(indx > -1)
+							freeSubAccBoxList.remove(indx);
+					}
+					
+					home.deletePieceOfFurniture(subAccBox);
+				}
+			}
+		}
 		
 		public Points getCorrectedFurnXY(HomePieceOfFurniture furnBox, HomePieceOfFurniture realFurn)
 		{
@@ -877,8 +1033,18 @@ public class PhoenixPCS extends Plugin
 		{		
 			List<HomePieceOfFurniture> hpList = new ArrayList<HomePieceOfFurniture>();
 			
+			freeSubAccBoxList = new ArrayList<String>();
+			
 			for(int h = 0; h <furnGrp.getFurniture().size(); h++)
 			{
+				for(HomePieceOfFurniture subBoxes : subAccBoxList)
+				{
+					if(!freeSubAccBoxList.contains(subBoxes.getName()))
+						freeSubAccBoxList.add(subBoxes.getName());
+				}
+				
+				currSubAccBoxParent = new ArrayList<String>();
+				
 				HomePieceOfFurniture hp = furnGrp.getFurniture().get(h);
 				String[] nameStr = hp.getName().split("_");
 
@@ -935,7 +1101,7 @@ public class PhoenixPCS extends Plugin
 						
 						if(indx == 7)
 						{
-							bIntersects = checkIntersectWithAllFurnsAndSubBoxes(realFurn, false, false);	
+							bIntersects = checkIntersectWithAllFurnsAndSubBoxes(realFurn, false, false);							
 							clearFurnParams(realFurn);
 							
 							if(!bIntersects)
@@ -964,7 +1130,7 @@ public class PhoenixPCS extends Plugin
 							else
 							{
 								// Balcony / Wall opening : check for access 
-								//if(!checkSubAccListForAccess())
+								if(!checkSubAccListForAccess())
 								{
 									//JOptionPane.showMessageDialog(null, "Discard - (" + indx + ") -> " + realFurn.getName());
 									hpList.add(realFurn);
@@ -972,8 +1138,8 @@ public class PhoenixPCS extends Plugin
 									hpList = new ArrayList<HomePieceOfFurniture>();
 									return hpList;
 								}
-								//else
-									//hpList.add(realFurn);
+								else
+									hpList.add(realFurn);
 							}
 						}
 						
@@ -986,104 +1152,7 @@ public class PhoenixPCS extends Plugin
 					
 			return hpList;
 		}
-		
-		public boolean checkIntersectWithAllFurnsAndSubBoxes(HomePieceOfFurniture hpf, boolean bIgnoreWindow, boolean bIgnoreAccBox)
-		{
-			boolean bIntersects = false;
-			//boolean bCheckSubBoxes = false;
 
-			for(int x = 0 ; x < furnIds.size(); x++)
-			{	
-				String fName = furnIds.get(x).toLowerCase();
-
-				if(bIgnoreAccBox)
-				{
-					if(fwsExpIds.contains(fName) && !fName.startsWith("dooracc"))
-					{
-						//JOptionPane.showMessageDialog(null, "bIgnoreAccBox");
-
-						bIntersects = false;
-						continue;
-					}
-				}
-				
-				if(bIgnoreWindow && fName.startsWith("window"))
-					continue;
-				
-				if(!hpf.getName().equalsIgnoreCase(furnIds.get(x)))
-				{
-					//bCheckSubBoxes = false;
-					
-					String refFurnName = furnIds.get(x);
-					
-					//if(refFurnName.startsWith("BalcAccBox") || refFurnName.startsWith("WallOAccBox"))
-						//bCheckSubBoxes = true;
-					
-					float[][] refFurnRect = furnRects.get(x);
-
-					for(int f = 0; f < refFurnRect.length; f++)
-					{
-						Points startLine = new Points(refFurnRect[f][0], refFurnRect[f][1]);
-
-						Points endLine = null;
-
-						if(f == (refFurnRect.length - 1))
-							endLine = new Points(refFurnRect[0][0], refFurnRect[0][1]);
-						else
-							endLine = new Points(refFurnRect[f+1][0], refFurnRect[f+1][1]);				
-
-						LineSegement ls = new LineSegement(startLine, endLine);
-
-						// For Accessibility check
-						List<Intersect> interList = new ArrayList<Intersect>();
-
-						interList = checkIntersect(ls, hpf.getName());
-
-						for(Intersect inter : interList)
-						{
-							if(inter != null)
-							{
-								bIntersects = checkPointInBetween(inter.p, ls.startP, ls.endP, FURN_TOLERANCE);
-
-								if(bIntersects)
-									break;
-							}
-							//putMarkers(inter.p, 3);
-						}
-					}
-					
-					// Debug
-					//if(bIntersects)
-						//JOptionPane.showMessageDialog(null, "refFurnName : " + refFurnName + ", f : " + hpf.getName() + ", -> bCheckSubBoxes : " + bCheckSubBoxes);
-						
-					// Check if it lies completely inside
-					if(!bIntersects)
-					{
-						HomePieceOfFurniture refFurn = furnList.get(x);
-						bIntersects = refFurn.containsPoint(hpf.getX(), hpf.getY(), FURN_TOLERANCE);
-					}
-					
-					/*
-					if(bIntersects && bCheckSubBoxes)
-					{
-						currSubAccBoxParent.add(refFurnName);
-						
-						//JOptionPane.showMessageDialog(null, "refFurnName : " + refFurnName + ", f : " + hpf.getName());
-						checkSubAccBoxes(hpf, refFurnName);
-					}
-					*/
-					
-					if(bIntersects)
-						break;
-				}
-
-				if(bIntersects)
-					break;
-			}
-
-			return bIntersects;
-		}
-		
 		public void populateWallFurn(Points midP, String textName, int prefIndx)
 		{				
 			float minDist = INFINITY;
@@ -1943,7 +2012,7 @@ public class PhoenixPCS extends Plugin
 				
 				for(Float k : keys)
 				{
-					if(minKeys.size() >= SHIFT_WALL_NOS)
+					if(minKeys.size() > 1)
 						break;
 					
 					minKeys.add(k);
@@ -1954,10 +2023,8 @@ public class PhoenixPCS extends Plugin
 					WallSegement minWS = distMap.get(minDist);
 					LineSegement minLS = new LineSegement(minWS);
 					
-					Points midMinLS = new Points(((minLS.startP.x + minLS.endP.x)/2.0f),(minLS.startP.y + minLS.endP.y)/2.0f);	
-					putMarkers(midMinLS, 5);
-					
-					//JOptionPane.showMessageDialog(null, "Position : " + minDist);
+					//Points midMinLS = new Points(((minLS.startP.x + minLS.endP.x)/2.0f),(minLS.startP.y + minLS.endP.y)/2.0f);	
+					//putMarkers(midMinLS, 5);
 					
 					if(minDist > SHIFT_TOLERANCE)
 						continue;
@@ -2028,12 +2095,12 @@ public class PhoenixPCS extends Plugin
 							if(bShiftInwards)
 							{
 								hpRef.setDepth(currDep - elongLen);
-								//JOptionPane.showMessageDialog(null, "Shift -> D-- !!! : " + elongLen);
+								//JOptionPane.showMessageDialog(null, "Shift -> D-- !!!");
 							}
 							else
 							{
 								hpRef.setDepth(currDep + elongLen);
-								//JOptionPane.showMessageDialog(null, "Shift -> D++ !!! : " + elongLen);
+								//JOptionPane.showMessageDialog(null, "Shift -> D++ !!!");
 							}
 							
 							float[][] elongFRect = hpRef.getPoints();
@@ -2046,11 +2113,6 @@ public class PhoenixPCS extends Plugin
 							//JOptionPane.showMessageDialog(null, "paraDist : " + paraDist);
 							
 							boolean bValidShift = (paraDist <= PLACEMENT_TOLERANCE) ? true : false;
-							
-							if(bValidShift)
-							{
-								bValidShift = (hpRef.getDepth() < PCS_RECT_MIN_DEPTH) ? false : bValidShift;
-							}
 							
 							if(bValidShift)
 							{
@@ -2293,59 +2355,47 @@ public class PhoenixPCS extends Plugin
 					bIgnoreAccBox = true;						
 					chkFurnOrient(hpPlaced, ws, tolerance);		// returns orientation (180*)
 
-					boolean bValid1 = checkAndSnap(hpPlaced, inWSList, tolr, pcsWallPrefIndx);
+					checkAndSnap(hpPlaced, inWSList, tolr, pcsWallPrefIndx);
 					
-					if(bValid1)
-					{
-						List<WallSegement> relWSList = getRelevantWalls(hpPlaced, inWSList);
+					List<WallSegement> relWSList = getRelevantWalls(hpPlaced, inWSList);
 
-						List<HomePieceOfFurniture> hpShiftList = checkAndShift(hpPlaced, relWSList, tolr, pcsWallPrefIndx);
-						//List<HomePieceOfFurniture> hpShiftList = checkAndShift(hpPlaced, inWSList, tolr, pcsWallPrefIndx);
+					List<HomePieceOfFurniture> hpShiftList = checkAndShift(hpPlaced, relWSList, tolr, pcsWallPrefIndx);
+					//List<HomePieceOfFurniture> hpShiftList = checkAndShift(hpPlaced, inWSList, tolr, pcsWallPrefIndx);
+					
+					String rectName = hpPlaced.getName();
+					home.deletePieceOfFurniture(hpPlaced);
+					
+					int counter3 = 1; 
+					
+					for(HomePieceOfFurniture hpShift : hpShiftList)
+					{						
+						hpShift.setName(rectName + "_" + counter3);
+						home.addPieceOfFurniture(hpShift);
 						
-						String rectName = hpPlaced.getName();
-						home.deletePieceOfFurniture(hpPlaced);
+						checkAndSnapWithoutWallPref(hpShift, inWSList, tolr);
 						
-						int counter3 = 1; 
-						
-						for(HomePieceOfFurniture hpShift : hpShiftList)
-						{						
-							hpShift.setName(rectName + "_" + counter3);
-							home.addPieceOfFurniture(hpShift);
+						bSuccess = checkInsideHome(finalWSList, hpShift, PLACEMENT_TOLERANCE);
+						//JOptionPane.showMessageDialog(null, "bSuccess : " + bSuccess);
+
+						if(bSuccess)
+						{	
+							Design des = new Design(hpShift, pcsConfIndx, pcsSeatingIndx, pcsWallPrefIndx);
 							
-							boolean bValid2 = checkAndSnapWithoutWallPref(hpShift, inWSList, tolr);
+							boolean bCheck = checkDesignList(des);
 							
-							if(bValid2)
+							if(bCheck)
 							{
-								//bSuccess = checkInsideHome(finalWSList, hpShift, PLACEMENT_TOLERANCE);
-								bSuccess = checkInsideRoom(livingRoom, hpShift.getPoints(), PLACEMENT_TOLERANCE);
-								
 								//JOptionPane.showMessageDialog(null, "bSuccess : " + bSuccess);
-
-								if(bSuccess)
-								{	
-									Design des = new Design(hpShift, pcsConfIndx, pcsSeatingIndx, pcsWallPrefIndx);
-									
-									boolean bCheck = checkDesignList(des);
-									
-									if(bCheck)
-									{
-										//JOptionPane.showMessageDialog(null, "bSuccess : " + bSuccess);
-										placeFurnBoxes(hpShift, pcsSeatingIndx, pcsWallPrefIndx);
-									}
-									else
-										home.deletePieceOfFurniture(hpShift);
-								}
-								else
-									home.deletePieceOfFurniture(hpShift);
+								placeFurnBoxes(hpShift, pcsSeatingIndx, pcsWallPrefIndx);
 							}
 							else
 								home.deletePieceOfFurniture(hpShift);
-							
-							counter3++; 
-						}	;
-					}
-					else
-						home.deletePieceOfFurniture(hpPlaced);
+						}
+						else
+							home.deletePieceOfFurniture(hpShift);
+						
+						counter3++; 
+					}					
 									
 					counter2++;
 				}
@@ -2357,29 +2407,45 @@ public class PhoenixPCS extends Plugin
 
 		public boolean checkDesignList(Design tmpDes)
 		{
-			boolean bRet = true;			
+			boolean bRet = true;
+			
 			boolean b1 = false;
+			boolean b2 = false;
+			boolean b3 = false;
+			boolean b4 = false;
+			boolean b5 = false;
 			
 			for(Design d : validDesignList)
 			{
 				b1 = false;
+				b2 = false;
+				b3 = false;
+				b4 = false;
+				b5 = false;
 				
-				if(d.seatingIndx == tmpDes.seatingIndx)
+				if(d.confIndx == tmpDes.confIndx)
 					b1 = true;
 				
-				if(b1)
+				if(d.seatingIndx == tmpDes.seatingIndx)
+					b2 = true;
+				
+				if(d.wallPrefIndx == tmpDes.wallPrefIndx)
+					b3 = true;
+				
+				if(b1 && b2 && b3)
 				{
 					JOptionPane.showMessageDialog(null, "Partial Match !!!");
 					
 					HomePieceOfFurniture h = d.pcsRect;
 					HomePieceOfFurniture tmp = tmpDes.pcsRect;
 					
-					Points hCenter = new Points(h.getX(), h.getY());
-					Points tmpCenter = new Points(tmp.getX(), tmp.getY());
+					if(h.getAngle() == tmp.getAngle())
+						b4 = true;
 					
-					float dist = calcDistance(hCenter, tmpCenter);
+					if((h.getX() == tmp.getX()) && (h.getY() == tmp.getY()))
+						b5 = true;
 					
-					if(dist <= SIMILAR_DESIGN_TOLERANCE)
+					if(b4 && b5)
 					{
 						JOptionPane.showMessageDialog(null, "Match !!!");
 						
@@ -2392,8 +2458,6 @@ public class PhoenixPCS extends Plugin
 			
 			if(bRet)
 				validDesignList.add(tmpDes);
-			
-			//JOptionPane.showMessageDialog(null, "designCompList : " + validDesignList.size());
 			
 			return bRet;
 		}
@@ -3345,6 +3409,39 @@ public class PhoenixPCS extends Plugin
 		}
 
 		// ======================= UTIL FUNCTIONS ======================= //
+
+		public boolean checkSubAccListForAccess()
+		{
+			boolean bHasAccess = false;
+			/*
+			if((currSubAccBoxParent.size() < 1) && freeSubAccBoxList.size() < 1)
+				bHasAccess = true;
+			else if(currSubAccBoxParent.size() > 0)
+			{
+				for(String boxName : freeSubAccBoxList)
+				{
+					boolean bHasAccessChk = false;
+					
+					for(String parentName : currSubAccBoxParent)
+					{
+						if(boxName.startsWith(parentName))
+							bHasAccessChk = true;
+					}
+					
+					if(!bHasAccessChk)
+					{
+						bHasAccess = false;
+						break;
+					}
+				}
+				
+				JOptionPane.showMessageDialog(null, "bHasAccess : " + bHasAccess);
+				
+				printSubList();
+			}
+			*/
+			return bHasAccess;
+		}
 		
 		public void createAccBox(HomePieceOfFurniture hpf, String fName)
 		{
@@ -4972,7 +5069,6 @@ public class PhoenixPCS extends Plugin
 		
 		public void printSubList()
 		{
-			/*
 			String dbgStr = "=== currSubAccBoxParent ===\n";
 			
 			for(String str : currSubAccBoxParent)
@@ -4988,8 +5084,6 @@ public class PhoenixPCS extends Plugin
 			}
 			
 			JOptionPane.showMessageDialog(null, dbgStr);
-			
-			*/
 		}
 	}
 

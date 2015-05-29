@@ -1,3 +1,12 @@
+Tuning:
+-------
+i.   Get Relevant Walls for Shift
+ii.  Check for duplicate design and ignore invalid config
+iii. On inward shift check depth >= 10 ft
+iv.  Placement position shift = 12ft // xxx - 50 ft 
+v .  Remove duplicates
+vi.  Add priority screening - 2 walls, 1 wall 
+
 Modifications:
 --------------
 1. Add Accessibility boxes for doors
@@ -19,6 +28,7 @@ E. Calculate PCSRect initial position with 12' shifts in both directions
 F. Check Shift - only alpha (outward + inward)
 G. Accessibility Line
 H. Multiple Accessibility boxes for balcony and wall openings - WIP
+
 --------------------------------------------------------------------------
 
 Prep:
