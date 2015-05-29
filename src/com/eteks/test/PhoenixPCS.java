@@ -145,7 +145,7 @@ public class PhoenixPCS extends Plugin
 		
 		public float SHIFT_TOLERANCE = 7.5f*CONV_FT_CM; // 6ft
 		
-		public float PCS_RECT_POS_LEN = 50.0f*CONV_FT_CM;  // 12ft
+		public float PCS_RECT_POS_LEN = 12.0f*CONV_FT_CM;  // 12ft
 		
 		public float PCS_RECT_MIN_DEPTH = 10.0f*CONV_FT_CM;
 		
@@ -2363,6 +2363,9 @@ public class PhoenixPCS extends Plugin
 			for(Design d : validDesignList)
 			{
 				b1 = false;
+				
+				if(d.seatingIndx == tmpDes.seatingIndx)
+					b1 = true;
 				
 				if(b1)
 				{
