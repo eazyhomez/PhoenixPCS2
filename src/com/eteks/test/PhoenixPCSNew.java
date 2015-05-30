@@ -1,6 +1,7 @@
 package com.eteks.test;
 
 import java.io.File;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -490,6 +491,8 @@ public class PhoenixPCSNew extends Plugin
 				long endTime = System.currentTimeMillis(); //System.nanoTime();				
 				//JOptionPane.showMessageDialog(null, "No. of Designs generated : " + validDesignCount);
 
+				printPriorList(indx);
+				
 				checkPriorityAndScreen("5S", f);
 				
 				JOptionPane.showMessageDialog(null, "Time : " + (endTime - startTime) + " ms");
@@ -727,37 +730,51 @@ public class PhoenixPCSNew extends Plugin
 		
 		public void printPriorList(int indx)
 		{	
-			String dbgStr = "";
+			//String dbgStr = "";
 			
 			for(int x = 0 ; x < priorityScoreList.size(); x++)
 			{
 				List<Integer> subPriorList = priorityScoreList.get(x);
-				String str = "";
+				//String str = "";
 				
 				for(int y = 0 ; y < subPriorList.size(); y++)
 				{
-					str += subPriorList.get(y) + ", ";
+					//str += subPriorList.get(y) + ", ";
 				}
 				
-				dbgStr += str + "\n";
+				//dbgStr += str + "\n";
 			}
 			
-			dbgStr += "\n-------------\n";
+			//dbgStr += "\n-------------\n";
 			
 			for(int x = 0 ; x < fileNameList.size(); x++)
 			{
 				List<String> subFilenameList = fileNameList.get(x);
-				String str = "";
+				//String str = "";
 				
 				for(int y = 0 ; y < subFilenameList.size(); y++)
 				{
-					str += subFilenameList.get(y) + ", ";
+					//str += subFilenameList.get(y) + ", ";
 				}
 				
-				dbgStr += str + "\n";
+				//dbgStr += str + "\n\n";
 			}
 			
-			JOptionPane.showMessageDialog(null, indx + "-> px : " + dbgStr);
+			/*
+			try
+			{
+				RandomAccessFile raf = new RandomAccessFile("D:/Phoenix/PCS Demo/priorityLog.txt", "rw");
+				raf.seek(0);
+				raf.writeBytes(dbgStr);
+				raf.close();
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+			*/
+			
+			//JOptionPane.showMessageDialog(null, indx + "-> px : " + dbgStr);
 		}
 		
 		public void checkPriorityAndScreen(String minConfigLabel, File baseDir)
@@ -765,58 +782,88 @@ public class PhoenixPCSNew extends Plugin
 			int indx = Arrays.binarySearch(configLabelArr, minConfigLabel);			
 			//JOptionPane.showMessageDialog(null, "indx : " + indx + ", priorityScoreList : " + priorityScoreList.size());
 			
+			//String dbgStr = "";
+			
 			try
-			{				
+			{		
+				//RandomAccessFile raf = new RandomAccessFile("D:/Phoenix/PCS Demo/screenLog.txt", "rw");
+				//raf.seek(0);
+				
 				for(int i = indx; i < configLabelArr.length; i++)
 				{
 					List<Integer> subPriorList = priorityScoreList.get(i);
 					
-					JOptionPane.showMessageDialog(null, subPriorList.size() + ", i : " + i);
+					//JOptionPane.showMessageDialog(null, subPriorList.size() + ", i : " + i);
 							
 					List<Integer> priorOneList = new ArrayList<Integer>();
 					List<Integer> priorTwoList = new ArrayList<Integer>();
 					
+					//String dbgStr1 = "";
+					
 					for(int p = 0; p < subPriorList.size(); p++)
 					{
 						if(subPriorList.get(p) == PRIORITY_1_WALLCOUNT)
+						{
 							priorOneList.add(p);
+							//dbgStr1 += "P1 : " + p + ", ";
+						}
 						else if(subPriorList.get(p) == PRIORITY_2_WALLCOUNT)
+						{
 							priorTwoList.add(p);
+							//dbgStr1 += "P2 : " + p + ", ";
+						}
 					}
 					
+					//dbgStr += "\nList " + i + " : \n" + dbgStr1 + "\n\n";
+							
 					Random randomGen = new Random();
 					
 					//JOptionPane.showMessageDialog(null, "priorOneList : " + priorOneList.size() + ", priorTwoList : " + priorTwoList.size());
 					
+					//String dbgStr2 = "";
+					
 					if(priorOneList.size() > 0)
 					{
 						int prOneIndx = randomGen.nextInt(priorOneList.size());
-						String fileOne = fileNameList.get(i).get(prOneIndx);
+						String fileOne = fileNameList.get(i).get(priorOneList.get(prOneIndx));
 						
+						//dbgStr2 += "[" + priorOneList.size() + "] : \n";
+								
 						//JOptionPane.showMessageDialog(null, "prOneIndx : " + prOneIndx + ", fileOne : " + fileOne);
 						//JOptionPane.showMessageDialog(null, "S1. " + (homeFilepath + File.separatorChar + fileOne));
 		
 						File srcOne = new File(homeFilepath + File.separatorChar + fileOne);
 						//JOptionPane.showMessageDialog(null, srcOne.exists() + ", " + srcOne.getAbsolutePath() + ", dir : " + dir.exists() + ", " + dir.getAbsolutePath());
 						
-						File destOne = new File(homeFilepath + File.separatorChar + "Selected_1_" + fileOne);						
+						File destOne = new File(homeFilepath + File.separatorChar + "Selected_P1_" + fileOne);						
+						
+						//dbgStr2 += "P1 : (" + prOneIndx + ") -> " + fileOne;
 						srcOne.renameTo(destOne);
 					}
 					
 					if(priorTwoList.size() > 0)
 					{
 						int prTwoIndx = randomGen.nextInt(priorTwoList.size());
-						String fileTwo = fileNameList.get(i).get(prTwoIndx);
+						String fileTwo = fileNameList.get(i).get(priorTwoList.get(prTwoIndx));
+						
+						//dbgStr2 += "[[" + priorTwoList.size() + "]] : \n";
 						
 						//JOptionPane.showMessageDialog(null, "prTwoIndx : " + prTwoIndx + ", fileTwo : " + fileTwo);
 						
 						File srcTwo = new File(homeFilepath + File.separatorChar + fileTwo);
 						//JOptionPane.showMessageDialog(null, srcTwo.exists() + ", " + srcTwo.getAbsolutePath());
 						
-						File destTwo = new File(homeFilepath + File.separatorChar + "Selected_2_" + fileTwo);						
+						File destTwo = new File(homeFilepath + File.separatorChar + "Selected_P2_" + fileTwo);						
+						
+						//dbgStr2 += "\nP2 : (" + prTwoIndx + ") => " + fileTwo;
 						srcTwo.renameTo(destTwo);
 					}
+					
+					//dbgStr += "Files " + i + " : \n" + dbgStr2 + "\n";
 				}
+				
+				//raf.writeBytes(dbgStr);
+				//raf.close();
 			}
 			catch (Exception e)
 			{

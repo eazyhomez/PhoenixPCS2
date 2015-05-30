@@ -1,9 +1,11 @@
 Tuning:
 -------
-i. Get Relevant Walls for Shift
-ii. Check for duplicate design and ignore invalid config
+i.   Get Relevant Walls for Shift
+ii.  Check for duplicate design and ignore invalid config
 iii. On inward shift check depth >= 10 ft
-iv. Placement position shift = 12ft // xxx - 50 ft 
+iv.  Placement position shift = 12ft // xxx - 50 ft 
+v .  Remove duplicates
+vi.  Add priority screening - 2 walls, 1 wall 
 
 Modifications:
 --------------
