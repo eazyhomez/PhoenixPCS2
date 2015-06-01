@@ -125,7 +125,7 @@ public class PhoenixPCSNew extends Plugin
 		public float ACCESSBOX_DEPTH = 2.5f * CONV_FT_CM;
 		public float ACCESSBOX_MIN_WIDTH = 2.5f * CONV_FT_CM;
 		
-		public float ACCESS_CHECK_SIZE = 2.5f * CONV_FT_CM;
+		public float ACCESS_CHECK_SIZE = 2.0f * CONV_FT_CM;  // 2.5f;
 
 		public boolean bShowMarkerInter = false;
 		public boolean bShowMarker = false;
@@ -137,7 +137,7 @@ public class PhoenixPCSNew extends Plugin
 
 		public Integer orgWallColor = -1184274;
 		
-		public int MIN_VALID_DESIGN_COUNT = 3;
+		public int MIN_VALID_DESIGN_COUNT = 10;	// 3;
 		public int validDesignCount = 0;
 
 		public String[] dbgArr = new String[5];
@@ -151,11 +151,13 @@ public class PhoenixPCSNew extends Plugin
 		
 		public float SHIFT_TOLERANCE = 7.5f*CONV_FT_CM; // 6ft
 		
-		public float PCS_RECT_POS_LEN = 12.0f*CONV_FT_CM;  // 12ft
+		public float PCS_RECT_POS_LEN = 50.0f*CONV_FT_CM;  // 12ft
 		
 		public float PCS_RECT_MIN_DEPTH = 10.0f*CONV_FT_CM;
 		
 		public int SHIFT_WALL_NOS = 1;
+		
+		public float CORRECTED_XY_TOLERANCE = 5.0f; // 5 degrees
 		
 		public float SIMILAR_DESIGN_TOLERANCE = 3.0f*CONV_FT_CM;
 		
@@ -495,8 +497,7 @@ public class PhoenixPCSNew extends Plugin
 				
 				checkPriorityAndScreen("5S", f);
 				
-				JOptionPane.showMessageDialog(null, "Time : " + (endTime - startTime) + " ms");
-			
+				JOptionPane.showMessageDialog(null, "Time : " + (endTime - startTime) + " ms");		
 			}
 			catch(Exception e)
 			{
@@ -880,25 +881,25 @@ public class PhoenixPCSNew extends Plugin
 			
 			//JOptionPane.showMessageDialog(null, "fAng : " + fAng);
 			
-			if(fAng == 0)
+			if(Math.abs(fAng - 0) < CORRECTED_XY_TOLERANCE)
 			{
 				newCoords.y = 0.0f - (0.5f*furnBox.getDepth()) + (0.5f*realFurn.getDepth());
 			}
-			else if(fAng == 90)
+			else if(Math.abs(fAng - 90) < CORRECTED_XY_TOLERANCE)
 			{
 				newCoords.x = (0.5f*furnBox.getDepth()) - (0.5f*realFurn.getDepth());
 			}
-			else if(fAng == 180)
+			else if(Math.abs(fAng - 180) < CORRECTED_XY_TOLERANCE)
 			{
 				newCoords.y = (0.5f*furnBox.getDepth()) - (0.5f*realFurn.getDepth());
 			}
-			else if(fAng == 270)
+			else if(Math.abs(fAng - 270) < CORRECTED_XY_TOLERANCE)
 			{
 				newCoords.x =  0.0f - (0.5f*furnBox.getDepth()) + (0.5f*realFurn.getDepth());
 			}
 			else
 			{
-				JOptionPane.showMessageDialog(null, "Unhandled !!!");
+				JOptionPane.showMessageDialog(null, "Unhandled !!! -> " + fAng);
 			}
 			
 			return newCoords;
@@ -1108,6 +1109,30 @@ public class PhoenixPCSNew extends Plugin
 						// Wallpaper behind Media Cabinet (not now)
 						if(indx == 7)	
 						{
+							float[][] mcRect = hp.getPoints();
+
+							Points mc0 = new Points(mcRect[0][0], mcRect[0][1]);
+							Points mc1 = new Points(mcRect[1][0], mcRect[1][1]);
+							
+							float diffX = 0.0f;
+							float diffY = 0.0f;
+							
+							WallSegement wsTouch = getTouchingWall(mc0, mc1, tolerance);
+							//putMarkers(new Points(mcRect[0][0], mcRect[0][1]), 3);
+							//putMarkers(new Points(mcRect[1][0], mcRect[1][1]), 4);
+							
+							if(wsTouch != null)
+							{
+								Points wallMidP = new Points(((wsTouch.startP.x + wsTouch.endP.x)/2.0f), ((wsTouch.startP.y + wsTouch.endP.y)/2.0f));
+								Points mcMidP = new Points(((mc0.x + mc1.x)/2.0f), ((mc0.y + mc1.y)/2.0f));
+								
+								diffX = (wallMidP.x - mcMidP.x);
+								diffY = (wallMidP.y - mcMidP.y);
+							}
+							
+							hp.setX(hp.getX() + diffX);
+							hp.setY(hp.getY() + diffY);
+							
 							Points hpMid = new Points(hp.getX(), hp.getY());						
 							populateWallFurn(hpMid, catTextArr, 0);
 	
@@ -1150,6 +1175,8 @@ public class PhoenixPCSNew extends Plugin
 								hpList.add(realFurn);
 							else
 								home.deletePieceOfFurniture(realFurn);
+							
+							//JOptionPane.showMessageDialog(null, "MC !!");
 						}
 						else if((indx == 9) || (indx == 11))
 						{
@@ -1223,6 +1250,13 @@ public class PhoenixPCSNew extends Plugin
 					//bCheckSubBoxes = false;
 					
 					String refFurnName = furnIds.get(x);
+					
+					// Ignoring furnitures in PCS as of now , to be take care in config
+					if(refFurnName.startsWith("PCS"))
+					{
+						//bCheckSubBoxes = false;
+						continue;
+					}
 					
 					//if(refFurnName.startsWith("BalcAccBox") || refFurnName.startsWith("WallOAccBox"))
 						//bCheckSubBoxes = true;
@@ -2374,6 +2408,51 @@ public class PhoenixPCSNew extends Plugin
 			
 			cleanupMarkers();
 			return bLiesOnWall;
+		}		
+		
+		public WallSegement getTouchingWall(Points fStartP, Points fEndP, float tolr)
+		{
+			WallSegement touchingWall = null;
+			cleanupMarkers();
+			
+			//putMarkers(fEndP, 3);
+			//putMarkers(fStartP, 4);
+			
+			Points centerFS = new Points(((fStartP.x + fEndP.x)/2.0f),(fStartP.y + fEndP.y)/2.0f);
+			
+			for(WallSegement ws : finalWSList)
+			{
+				LineSegement ls = new LineSegement(ws);
+				LineSegement fs = new LineSegement(fStartP, fEndP);
+				
+				boolean bIsParallel = isParallel(fs, ls, tolerance);
+				
+				if(bIsParallel)
+				{					
+					//  X-------F==========F-------X
+					boolean b1 = checkPointInBetween(fStartP, ls.startP, ls.endP, tolr);
+					boolean b2 = checkPointInBetween(fEndP, ls.startP, ls.endP, tolr);
+					boolean b3 = checkPointInBetween(centerFS, ls.startP, ls.endP, tolr);
+					
+					//JOptionPane.showMessageDialog(null, "1. b1 : " + b1 + ", b2 : " + b2 + ", b3 : " + b3);
+					
+					if(b1 || b2 || b3)
+					{
+						touchingWall = ws;
+						
+						// Debug
+						//Points centerLS = new Points(((ls.startP.x + ls.endP.x)/2.0f),(ls.startP.y + ls.endP.y)/2.0f);
+						//putMarkers(centerLS, 1);
+						//JOptionPane.showMessageDialog(null, "Touching wall");
+						
+						break;
+					}
+				}
+
+			}
+			
+			cleanupMarkers();
+			return touchingWall;
 		}
 		
 		/*
@@ -2911,12 +2990,13 @@ public class PhoenixPCSNew extends Plugin
 					if(bShowMarker)
 					{
 						Points midFWS = new Points(((ws.startP.x + ws.endP.x)/2.0f),((ws.startP.y + ws.endP.y)/2.0f));
-						//putMarkers(midFWS, 1);
+						putMarkers(midFWS, 1);
 						//JOptionPane.showMessageDialog(null, "!!!");
 					}
 				}
 			}
 
+			//JOptionPane.showMessageDialog(null, "Final FWS !!!");
 			return finalWSList;
 		}
 
@@ -3186,9 +3266,11 @@ public class PhoenixPCSNew extends Plugin
 				{
 					// Marker
 					Points midWS = new Points(((validWS.startP.x + validWS.endP.x)/2.0f),((validWS.startP.y + validWS.endP.y)/2.0f));
-					//putMarkers(midWS, 6);
+					putMarkers(midWS, 6);
 				}
 			}
+			
+			//JOptionPane.showMessageDialog(null, "Valid Inner WS !");
 
 			return validRSWallList;
 		}

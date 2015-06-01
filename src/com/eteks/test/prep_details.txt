@@ -1,12 +1,13 @@
 Tuning:
 -------
-i.   Get Relevant Walls for Shift
-ii.  Check for duplicate design and ignore invalid config
-iii. On inward shift check depth >= 10 ft
-iv.  Placement position shift = 12ft // xxx - 50 ft 
-v .  Remove duplicates
-vi.  Add priority screening - 2 walls, 1 wall
-vii. Renaming of files as per priority
+1. Get Relevant Walls for Shift
+2. Check for duplicate design and ignore invalid config
+3. On inward shift check depth >= 10 ft
+4. Placement position shift = 12ft // xxx - 50 ft 
+5. Remove duplicates
+6. Add priority screening - 2 walls, 1 wall
+7. Renaming of files as per priority
+8. Place Media Cabinet @ center of its touching wall 
 
 Modifications:
 --------------
